@@ -38,6 +38,35 @@ impl Vector3 {
         let l = self.length();
         Vector3::new(self.x / l, self.y / l, self.z / l)
     }
+
+    pub fn barycentric(point: Vector3, v0: Vector3, v1: Vector3, v2: Vector3) -> Option<Vector3> {
+        //let x = Vector3::new((v2.x - v0.x) as f32, (v1.x - v0.x) as f32, (v0.x - point.x) as f32);
+        //let y = Vector3::new((v2.y - v0.y) as f32, (v1.y - v0.y) as f32, (v0.y - point.y) as f32);
+//
+        //let u = Vector3::cross(x, y);
+//
+        //if u.z < 1.0 {
+        //    return None;
+        //}
+//
+        //Some(Vector3::new(1.0 - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z))
+
+        let vec0 = v1 - v0;
+        let vec1 = v2 - v0;
+        let vec2 = point - v0;
+        let d00 = Vector3::dot(vec0, vec0);
+        let d01 = Vector3::dot(vec0, vec1);
+        let d11 = Vector3::dot(vec1, vec1);
+        let d20 = Vector3::dot(vec2, vec0);
+        let d21 = Vector3::dot(vec2, vec1);
+        let denom = d00 * d11 - d01 * d01;
+
+        let v = (d11 * d20 - d01 * d21) / denom;
+        let w = (d00 * d21 - d01 * d20) / denom;
+        let u = 1.0 - v - w;
+
+        Some(Vector3::new(u, v, w))
+    }
 }
 
 impl Add for Vector3 {
@@ -57,5 +86,23 @@ impl Sub for Vector3 {
         Vector3 {x: self.x - other.x,
                  y: self.y - other.y,
                  z: self.z - other.z}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use vector3::*;
+
+    #[test]
+    fn test_vector_subtraction() {
+        let a = Vector3 {x: 1.0, y: 1.0, z: 1.0};
+        let b = Vector3 {x: 1.0, y: 2.0, z: 3.0};
+        let c = a - b;
+        assert_eq!(c.x, 0.0);
+        assert_eq!(c.y, -1.0);
+        assert_eq!(c.z, -2.0);
+
+        let d = a - b;
+        assert_eq!(d.x, 0.0);
     }
 }
