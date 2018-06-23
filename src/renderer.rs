@@ -2,28 +2,28 @@ extern crate sdl2;
 
 use vector3::Vector3;
 use vector2::Vector2i;
-use model::{Model, Vertex};
+use model::{Model, Triangle};
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;
 use sdl2::rect::Point;
 use std::mem;
 use zbuffer::ZBuffer;
+use image;
+use image::{GenericImage, ImageBuffer, DynamicImage};
 
 pub struct Renderer {
     light_dir: Vector3,
     models: Vec<Model>,
-    render_target_width: i32,
-    render_target_height: i32,
     zbuffer: ZBuffer,
+    texture: Box<DynamicImage>,
 }
 
 impl Renderer {
     pub fn new() -> Renderer {
         Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
                    models: Vec::new(),
-                   render_target_width: 800,
-                   render_target_height: 800,
-                   zbuffer: ZBuffer::new(800, 800) }
+                   zbuffer: ZBuffer::new(800, 800),
+                   texture: Box::new(image::open("head_diffuse.png").unwrap()) }
     }
 
     pub fn load_models(&mut self) {
@@ -35,32 +35,28 @@ impl Renderer {
         self.zbuffer.clear();
 
         for model in &self.models {
-            for t in 0..model.triangle_count() {
-                let (v0, v1, v2) = model.get_triangle_vertices(t);
-                
-                let normal = Vector3::cross(v2.position() - v0.position(), v1.position() - v0.position()).normalized();
+            for triangle in model.triangles() {
+                let normal = Vector3::cross(triangle.v2 - triangle.v0, triangle.v1 - triangle.v0).normalized();
                 let intensity = Vector3::dot(normal, self.light_dir);
 
                 if intensity > 0.0 {
-                    let color_value = (255.0 * intensity) as u8;
-                    canvas.set_draw_color(Color::RGB(color_value, color_value, color_value));
-                    Renderer::draw_triangle(canvas, v0, v1, v2, &mut self.zbuffer);
+                    Renderer::draw_triangle(canvas, *triangle, &mut self.zbuffer, &self.texture, intensity);
                 }
             }
         }
     }
 
-    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, v0: Vertex, v1: Vertex, v2: Vertex, zbuffer: &mut ZBuffer) {
+    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, triangle: Triangle, zbuffer: &mut ZBuffer, texture: &Box<DynamicImage>, intensity: f32) {
         let canvas_width = canvas.viewport().width() as f32;
         let canvas_height = canvas.viewport().height() as f32;
 
-        let p0 = Vector2i::new(to_screen_space(v0.x, canvas_width as f32), to_screen_space(-v0.y, canvas_height as f32));
-        let p1 = Vector2i::new(to_screen_space(v1.x, canvas_width as f32), to_screen_space(-v1.y, canvas_height as f32));
-        let p2 = Vector2i::new(to_screen_space(v2.x, canvas_width as f32), to_screen_space(-v2.y, canvas_height as f32));
+        let p0 = Vector2i::new(to_screen_space(triangle.v0.x, canvas_width as f32), to_screen_space(-triangle.v0.y, canvas_height as f32));
+        let p1 = Vector2i::new(to_screen_space(triangle.v1.x, canvas_width as f32), to_screen_space(-triangle.v1.y, canvas_height as f32));
+        let p2 = Vector2i::new(to_screen_space(triangle.v2.x, canvas_width as f32), to_screen_space(-triangle.v2.y, canvas_height as f32));
         
-        let ortho0 = Vector3::new((v0.x + 1.0) * canvas_width / 2.0, (-v0.y + 1.0) * canvas_height / 2.0, 0.0);
-        let ortho1 = Vector3::new((v1.x + 1.0) * canvas_width / 2.0, (-v1.y + 1.0) * canvas_height / 2.0, 0.0);
-        let ortho2 = Vector3::new((v2.x + 1.0) * canvas_width / 2.0, (-v2.y + 1.0) * canvas_height / 2.0, 0.0);
+        let screen_space0 = Vector3::new((triangle.v0.x + 1.0) * canvas_width / 2.0, (-triangle.v0.y + 1.0) * canvas_height / 2.0, triangle.v0.z);
+        let screen_space1 = Vector3::new((triangle.v1.x + 1.0) * canvas_width / 2.0, (-triangle.v1.y + 1.0) * canvas_height / 2.0, triangle.v1.z);
+        let screen_space2 = Vector3::new((triangle.v2.x + 1.0) * canvas_width / 2.0, (-triangle.v2.y + 1.0) * canvas_height / 2.0, triangle.v2.z);
 
         let (bbox_min, bbox_max) = Vector2i::bbox3(p0, p1, p2);
 
@@ -70,14 +66,30 @@ impl Renderer {
                     continue;
                 }
 
-                let b = Vector3::barycentric(Vector3::new(x as f32, y as f32, 0.0), ortho0, ortho1, ortho2);
+                let b = Vector3::barycentric(Vector3::new(x as f32, y as f32, 0.0), screen_space0, screen_space1, screen_space2);
 
                 match b {
                     Some(uvw) => {
                         if uvw.x >= 0.0 && uvw.y >= 0.0 && uvw.z >= 0.0 {
-                            let z_distance = uvw.x * v0.z + uvw.y * v1.z + uvw.z * v2.z;
-                            if z_distance < zbuffer.sample(x as usize, y as usize) {
+                            let z_distance = uvw.x * screen_space0.z + uvw.y * screen_space1.z + uvw.z * screen_space2.z;
+                            
+                            if z_distance > zbuffer.sample(x as usize, y as usize) {
                                 zbuffer.set(z_distance, x as usize, y as usize);
+
+                                let u = uvw.x * triangle.vt0.x + uvw.y * triangle.vt1.x + uvw.z * triangle.vt2.x;
+                                let v = 1.0 - (uvw.x * triangle.vt0.y + uvw.y * triangle.vt1.y + uvw.z * triangle.vt2.y);
+
+                                let w = texture.width() as f32;
+                                let h = texture.height() as f32;
+
+                                let color = texture.get_pixel((u * w) as u32, (v * h) as u32);
+                                
+                                let r = (color.data[0] as f32 * intensity) as u8;
+                                let g = (color.data[1] as f32 * intensity) as u8;
+                                let b = (color.data[2] as f32 * intensity) as u8;
+                                
+                                canvas.set_draw_color(Color::RGB(r, g, b));
+
                                 canvas.draw_point(Point::new(x, y)).unwrap();
                             }
                         }

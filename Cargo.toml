@@ -5,3 +5,4 @@ authors = ["Sean Humeniuk <seanhumeniuk@gmail.com>"]
 
 [dependencies]
 sdl2 = "*"
+image = "*"

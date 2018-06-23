@@ -1,4 +1,5 @@
 extern crate sdl2;
+extern crate image;
 
 mod vector3;
 mod vector2;
