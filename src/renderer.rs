@@ -9,13 +9,16 @@ use sdl2::rect::Point;
 use std::mem;
 use zbuffer::ZBuffer;
 use image;
-use image::{GenericImage, ImageBuffer, DynamicImage};
+use image::{GenericImage, DynamicImage};
+use matrix4::Matrix4;
+use quaternion::Quaternion;
 
 pub struct Renderer {
     light_dir: Vector3,
     models: Vec<Model>,
     zbuffer: ZBuffer,
     texture: Box<DynamicImage>,
+    timer: f32,
 }
 
 impl Renderer {
@@ -23,7 +26,8 @@ impl Renderer {
         Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
                    models: Vec::new(),
                    zbuffer: ZBuffer::new(800, 800),
-                   texture: Box::new(image::open("head_diffuse.png").unwrap()) }
+                   texture: Box::new(image::open("head_diffuse.png").unwrap()),
+                   timer: 0.0 }
     }
 
     pub fn load_models(&mut self) {
@@ -34,14 +38,27 @@ impl Renderer {
     pub fn render(&mut self, canvas: &mut Canvas<sdl2::video::Window>) {
         self.zbuffer.clear();
 
+        self.timer += 0.1;
+
         for model in &self.models {
+            let q = Quaternion::new(0.0, self.timer, 0.0);
+            let mvp = Matrix4::translation(0.25, 0.25, 0.0) * Matrix4::rotation(q) * Matrix4::scale(0.5, 0.5, 0.5);
+
             for triangle in model.triangles() {
+                let mut triangle_mvp = *triangle;
+                triangle_mvp.v0 = mvp * triangle_mvp.v0;
+                triangle_mvp.v1 = mvp * triangle_mvp.v1;
+                triangle_mvp.v2 = mvp * triangle_mvp.v2;
+
                 let normal = Vector3::cross(triangle.v2 - triangle.v0, triangle.v1 - triangle.v0).normalized();
                 let intensity = Vector3::dot(normal, self.light_dir);
+                let intensity = if intensity > 0.0 {
+                    intensity
+                } else {
+                    0.0
+                };
 
-                if intensity > 0.0 {
-                    Renderer::draw_triangle(canvas, *triangle, &mut self.zbuffer, &self.texture, intensity);
-                }
+                Renderer::draw_triangle(canvas, triangle_mvp, &mut self.zbuffer, &self.texture, intensity);
             }
         }
     }

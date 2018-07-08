@@ -6,6 +6,8 @@ mod vector2;
 mod model;
 mod renderer;
 mod zbuffer;
+mod matrix4;
+mod quaternion;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
