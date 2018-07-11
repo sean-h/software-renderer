@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn test_quaternion_new() {
         let q = Quaternion::new(0.0, FRAC_PI_2, 0.0);
-        assert!((q.x - 0.7071).abs() < 0.001);
-        assert!((q.z - 0.7071).abs() < 0.001);
+        assert!((q.y - 0.7071).abs() < 0.001);
+        assert!((q.w - 0.7071).abs() < 0.001);
     }
 }

@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub, Mul};
+use std::ops::{Add, Sub, Mul, Neg};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vector3 {
@@ -88,6 +88,14 @@ impl Mul<f32> for Vector3 {
     }
 }
 
+impl Neg for Vector3 {
+    type Output = Vector3;
+
+    fn neg(self) -> Vector3 {
+        Vector3 {x: -self.x, y: -self.y, z: -self.z}
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use vector3::*;
@@ -103,5 +111,16 @@ mod tests {
 
         let d = a - b;
         assert_eq!(d.x, 0.0);
+    }
+
+    #[test]
+    fn test_vector_cross() {
+        let x = Vector3 {x: 1.0, y: 0.0, z: 0.0};
+        let y = Vector3 {x: 0.0, y: 1.0, z: 0.0};
+        let z = Vector3::cross(x, y);
+
+        assert_eq!(0.0, z.x);
+        assert_eq!(0.0, z.y);
+        assert_eq!(1.0, z.z);
     }
 }

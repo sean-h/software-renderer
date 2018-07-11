@@ -46,6 +46,18 @@ impl Matrix4 {
                         [    2.0 * (qxqz - qwqy),     2.0 * (qyqz + qwqx), 1.0 - 2.0 * (qx2 + qy2), 0.0],
                         [                    0.0,                     0.0,                     0.0, 1.0]]}
     }
+
+    pub fn look_at(position: Vector3, look: Vector3, up: Vector3) -> Matrix4 {
+        // forward points away from the look direction
+        let forward = (position - look).normalized();
+        let left = Vector3::cross(forward, up.normalized()).normalized();
+        let new_up = Vector3::cross(forward, left);
+
+        Matrix4 {data: [[left.x, new_up.x, forward.x, -Vector3::dot(left, position)],
+                        [left.y, new_up.y, forward.y, -Vector3::dot(new_up, position)],
+                        [left.z, new_up.z, forward.z, -Vector3::dot(forward, position)],
+                        [    0.0,     0.0,       0.0,                              1.0]]}
+    }
 }
 
 impl Index<usize> for Matrix4 {
@@ -116,5 +128,20 @@ mod tests {
         assert_eq!(mv.x, 4.0);
         assert_eq!(mv.y, 4.0);
         assert_eq!(mv.z, 3.0);
+    }
+
+    #[test]
+    fn test_matrix_look_at() {
+        let pos = Vector3::new(2.0, -5.0, 0.0);
+        let look = Vector3::new(3.0, -5.0, 0.0);
+        let up = Vector3::new(0.0, 1.0, 0.0);
+
+        let m = Matrix4::look_at(pos, look, up);
+        let v = Vector3::new(4.0, -5.0, 0.0);
+        let mv = m * v;
+
+        assert_eq!(mv.x, 0.0);
+        assert_eq!(mv.y, 0.0);
+        assert_eq!(mv.z, -2.0);
     }
 }

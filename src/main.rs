@@ -8,6 +8,7 @@ mod renderer;
 mod zbuffer;
 mod matrix4;
 mod quaternion;
+mod camera;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
