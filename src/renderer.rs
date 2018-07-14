@@ -11,7 +11,6 @@ use zbuffer::ZBuffer;
 use image;
 use image::{GenericImage, DynamicImage};
 use matrix4::Matrix4;
-use quaternion::Quaternion;
 
 pub struct Renderer {
     light_dir: Vector3,
@@ -39,10 +38,10 @@ impl Renderer {
         self.zbuffer.clear();
 
         self.timer += 0.1;
+        let p = Vector3::new(10.0 * self.timer.cos(), 0.0, 10.0 * self.timer.sin());
 
         for model in &self.models {
-            let q = Quaternion::new(0.0, self.timer, 0.0);
-            let mvp = Matrix4::translation(0.25, 0.25, 0.0) * Matrix4::rotation(q) * Matrix4::scale(0.5, 0.5, 0.5);
+            let mvp = Matrix4::look_at(p, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0)) * Matrix4::translation(0.0, 0.0, -1.0) * Matrix4::scale(0.5, 0.5, 0.5);
 
             for triangle in model.triangles() {
                 let mut triangle_mvp = *triangle;
@@ -67,19 +66,19 @@ impl Renderer {
         let canvas_width = canvas.viewport().width() as f32;
         let canvas_height = canvas.viewport().height() as f32;
 
-        let p0 = Vector2i::new(to_screen_space(triangle.v0.x, canvas_width as f32), to_screen_space(-triangle.v0.y, canvas_height as f32));
-        let p1 = Vector2i::new(to_screen_space(triangle.v1.x, canvas_width as f32), to_screen_space(-triangle.v1.y, canvas_height as f32));
-        let p2 = Vector2i::new(to_screen_space(triangle.v2.x, canvas_width as f32), to_screen_space(-triangle.v2.y, canvas_height as f32));
+        let p0 = Vector2i::new(to_screen_space(triangle.v0.x, canvas_width as f32), to_screen_space(triangle.v0.y, canvas_height as f32));
+        let p1 = Vector2i::new(to_screen_space(triangle.v1.x, canvas_width as f32), to_screen_space(triangle.v1.y, canvas_height as f32));
+        let p2 = Vector2i::new(to_screen_space(triangle.v2.x, canvas_width as f32), to_screen_space(triangle.v2.y, canvas_height as f32));
         
-        let screen_space0 = Vector3::new((triangle.v0.x + 1.0) * canvas_width / 2.0, (-triangle.v0.y + 1.0) * canvas_height / 2.0, triangle.v0.z);
-        let screen_space1 = Vector3::new((triangle.v1.x + 1.0) * canvas_width / 2.0, (-triangle.v1.y + 1.0) * canvas_height / 2.0, triangle.v1.z);
-        let screen_space2 = Vector3::new((triangle.v2.x + 1.0) * canvas_width / 2.0, (-triangle.v2.y + 1.0) * canvas_height / 2.0, triangle.v2.z);
+        let screen_space0 = Vector3::new((triangle.v0.x + 1.0) * canvas_width / 2.0, (triangle.v0.y + 1.0) * canvas_height / 2.0, triangle.v0.z);
+        let screen_space1 = Vector3::new((triangle.v1.x + 1.0) * canvas_width / 2.0, (triangle.v1.y + 1.0) * canvas_height / 2.0, triangle.v1.z);
+        let screen_space2 = Vector3::new((triangle.v2.x + 1.0) * canvas_width / 2.0, (triangle.v2.y + 1.0) * canvas_height / 2.0, triangle.v2.z);
 
         let (bbox_min, bbox_max) = Vector2i::bbox3(p0, p1, p2);
 
         for x in bbox_min.x..bbox_max.x+1 {
             for y in bbox_min.y..bbox_max.y+1 {
-                if x >= canvas_width as i32 || y >= canvas_height as i32 {
+                if x >= canvas_width as i32 || y >= canvas_height as i32 || x < 0 || y < 0  {
                     continue;
                 }
 

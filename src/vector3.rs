@@ -16,6 +16,18 @@ impl Vector3 {
         Vector3 { x: 0.0, y: 0.0, z: 0.0 }
     }
 
+    pub fn up() -> Vector3 {
+        Vector3 { x: 0.0, y: 1.0, z: 0.0 }
+    }
+
+    pub fn forward() -> Vector3 {
+        Vector3 { x: 0.0, y: 0.0, z: 1.0 }
+    }
+
+    pub fn left() -> Vector3 {
+        Vector3 { x: 1.0, y: 0.0, z: 0.0 }
+    }
+
     pub fn dot(v0: Vector3, v1: Vector3) -> f32 {
         v0.x * v1.x + v0.y * v1.y + v0.z * v1.z
     }
