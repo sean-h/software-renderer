@@ -58,6 +58,13 @@ impl Matrix4 {
                         [left.z, new_up.z, forward.z, -Vector3::dot(forward, position)],
                         [    0.0,     0.0,       0.0,                              1.0]]}
     }
+
+    pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Matrix4 {
+        Matrix4 {data: [[2.0 / (right - left),                  0.0,                  0.0, -(right + left) / (right - left)],
+                        [                 0.0, 2.0 / (top - bottom),                  0.0, -(top + bottom) / (top - bottom)],
+                        [                 0.0,                  0.0, 2.0 / (-far - -near), -(-far + -near) / (-far - -near)],
+                        [                 0.0,                  0.0,                  0.0,                              1.0]]}
+    }
 }
 
 impl Index<usize> for Matrix4 {

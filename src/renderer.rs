@@ -41,7 +41,10 @@ impl Renderer {
         let p = Vector3::new(10.0 * self.timer.cos(), 0.0, 10.0 * self.timer.sin());
 
         for model in &self.models {
-            let mvp = Matrix4::look_at(p, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0)) * Matrix4::translation(0.0, 0.0, -1.0) * Matrix4::scale(0.5, 0.5, 0.5);
+            let mvp = Matrix4::ortho(-2.0, 2.0, -2.0, 2.0, 0.1, 50.0)
+            * Matrix4::look_at(p, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0))
+            * Matrix4::translation(0.0, 0.0, -1.0)
+            * Matrix4::scale(0.5, 0.5, 0.5);
 
             for triangle in model.triangles() {
                 let mut triangle_mvp = *triangle;
@@ -57,12 +60,12 @@ impl Renderer {
                     0.0
                 };
 
-                Renderer::draw_triangle(canvas, triangle_mvp, &mut self.zbuffer, &self.texture, intensity);
+                Renderer::draw_triangle(canvas, triangle_mvp, &mut self.zbuffer, Some(&self.texture), intensity);
             }
         }
     }
 
-    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, triangle: Triangle, zbuffer: &mut ZBuffer, texture: &Box<DynamicImage>, intensity: f32) {
+    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, triangle: Triangle, zbuffer: &mut ZBuffer, texture: Option<&Box<DynamicImage>>, intensity: f32) {
         let canvas_width = canvas.viewport().width() as f32;
         let canvas_height = canvas.viewport().height() as f32;
 
@@ -89,23 +92,25 @@ impl Renderer {
                         if uvw.x >= 0.0 && uvw.y >= 0.0 && uvw.z >= 0.0 {
                             let z_distance = uvw.x * screen_space0.z + uvw.y * screen_space1.z + uvw.z * screen_space2.z;
                             
-                            if z_distance > zbuffer.sample(x as usize, y as usize) {
+                            if z_distance.abs() < 1.0 && z_distance > zbuffer.sample(x as usize, y as usize) {
                                 zbuffer.set(z_distance, x as usize, y as usize);
 
                                 let u = uvw.x * triangle.vt0.x + uvw.y * triangle.vt1.x + uvw.z * triangle.vt2.x;
                                 let v = 1.0 - (uvw.x * triangle.vt0.y + uvw.y * triangle.vt1.y + uvw.z * triangle.vt2.y);
 
-                                let w = texture.width() as f32;
-                                let h = texture.height() as f32;
+                                let (r, g, b) = match texture {
+                                    Some(texture) => {
+                                        let w = texture.width() as f32;
+                                        let h = texture.height() as f32;
 
-                                let color = texture.get_pixel((u * w) as u32, (v * h) as u32);
-                                
-                                let r = (color.data[0] as f32 * intensity) as u8;
-                                let g = (color.data[1] as f32 * intensity) as u8;
-                                let b = (color.data[2] as f32 * intensity) as u8;
+                                        let color = texture.get_pixel((u * w) as u32, (v * h) as u32);
+
+                                        ((color.data[0] as f32 * intensity) as u8, (color.data[1] as f32 * intensity) as u8, (color.data[2] as f32 * intensity) as u8)
+                                    },
+                                    None => ((128.0 * intensity) as u8, (128.0 * intensity) as u8, (128.0 * intensity) as u8)
+                                };
                                 
                                 canvas.set_draw_color(Color::RGB(r, g, b));
-
                                 canvas.draw_point(Point::new(x, y)).unwrap();
                             }
                         }

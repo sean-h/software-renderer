@@ -68,6 +68,7 @@ impl Vector3 {
 
         Some(Vector3::new(u, v, w))
     }
+
 }
 
 impl Add for Vector3 {
