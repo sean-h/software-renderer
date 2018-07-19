@@ -41,7 +41,7 @@ impl Renderer {
         let p = Vector3::new(10.0 * self.timer.cos(), 0.0, 10.0 * self.timer.sin());
 
         for model in &self.models {
-            let mvp = Matrix4::ortho(-2.0, 2.0, -2.0, 2.0, 0.1, 50.0)
+            let mvp = Matrix4::ortho(-1.0, 1.0, -1.0, 1.0, 0.1, 50.0)
             * Matrix4::look_at(p, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0))
             * Matrix4::translation(0.0, 0.0, -1.0)
             * Matrix4::scale(0.5, 0.5, 0.5);
@@ -53,6 +53,12 @@ impl Renderer {
                 triangle_mvp.v2 = mvp * triangle_mvp.v2;
 
                 let normal = Vector3::cross(triangle.v2 - triangle.v0, triangle.v1 - triangle.v0).normalized();
+
+                let camera_forward = (p).normalized();
+                if Vector3::dot(normal, camera_forward) < 0.0 {
+                    continue;
+                }
+
                 let intensity = Vector3::dot(normal, self.light_dir);
                 let intensity = if intensity > 0.0 {
                     intensity
