@@ -12,3 +12,12 @@ pub struct Camera {
     pub projection: Projection,
 }
 
+impl Camera {
+    pub fn new() -> Camera {
+        Camera {
+            position: Vector3::new(0.0, 0.0, 0.0),
+            rotation: Quaternion::new(0.0, 0.0, 1.0),
+            projection: Projection::Orthographic,
+        }
+    }
+}

@@ -11,6 +11,7 @@ use zbuffer::ZBuffer;
 use image;
 use image::{GenericImage, DynamicImage};
 use matrix4::Matrix4;
+use camera::Camera;
 
 pub struct Renderer {
     light_dir: Vector3,
@@ -18,6 +19,7 @@ pub struct Renderer {
     zbuffer: ZBuffer,
     texture: Box<DynamicImage>,
     timer: f32,
+    camera: Camera,
 }
 
 impl Renderer {
@@ -26,7 +28,8 @@ impl Renderer {
                    models: Vec::new(),
                    zbuffer: ZBuffer::new(800, 800),
                    texture: Box::new(image::open("head_diffuse.png").unwrap()),
-                   timer: 0.0 }
+                   timer: 0.0,
+                   camera: Camera::new() }
     }
 
     pub fn load_models(&mut self) {
@@ -38,11 +41,11 @@ impl Renderer {
         self.zbuffer.clear();
 
         self.timer += 0.1;
-        let p = Vector3::new(10.0 * self.timer.cos(), 0.0, 10.0 * self.timer.sin());
+        self.camera.position = Vector3::new(10.0 * self.timer.cos(), 0.0, 10.0 * self.timer.sin());
 
         for model in &self.models {
             let mvp = Matrix4::ortho(-1.0, 1.0, -1.0, 1.0, 0.1, 50.0)
-            * Matrix4::look_at(p, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0))
+            * Matrix4::look_at(self.camera.position, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0))
             * Matrix4::translation(0.0, 0.0, -1.0)
             * Matrix4::scale(0.5, 0.5, 0.5);
 
@@ -54,7 +57,7 @@ impl Renderer {
 
                 let normal = Vector3::cross(triangle.v2 - triangle.v0, triangle.v1 - triangle.v0).normalized();
 
-                let camera_forward = (p).normalized();
+                let camera_forward = (self.camera.position).normalized();
                 if Vector3::dot(normal, camera_forward) < 0.0 {
                     continue;
                 }
