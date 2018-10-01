@@ -1,0 +1,4 @@
+Renderer Help
+--model
+--width
+--height

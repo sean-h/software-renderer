@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use vector3::Vector3;
+use std::path::Path;
 
 #[derive(Copy, Clone)]
 pub struct Triangle {
@@ -30,10 +31,10 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(filename: &str) -> Model {
-        let mut f = File::open(filename).expect(&format!("File not found: {}", filename));
+    pub fn new(filepath: &Path) -> Model {
+        let mut f = File::open(filepath).expect(&format!("File not found: {:?}", filepath));
         let mut file_contents = String::new();
-        f.read_to_string(&mut file_contents).expect(&format!("Error reading file: {}", filename));
+        f.read_to_string(&mut file_contents).expect(&format!("Error reading file: {:?}", filepath));
 
         let mut vertices = Vec::new();
         let mut uv = Vec::new();

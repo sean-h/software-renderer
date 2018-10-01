@@ -12,6 +12,7 @@ use image;
 use image::{GenericImage, DynamicImage};
 use matrix4::Matrix4;
 use camera::Camera;
+use std::path::Path;
 
 pub struct Renderer {
     light_dir: Vector3,
@@ -32,9 +33,11 @@ impl Renderer {
                    camera: Camera::new() }
     }
 
-    pub fn load_models(&mut self) {
-        let model = Model::new("head.obj");
-        self.models.push(model);
+    pub fn load_models(&mut self, model_paths: Vec<&Path>) {
+        for path in model_paths {
+            let model = Model::new(path);
+            self.models.push(model);
+        }
     }
 
     pub fn render(&mut self, canvas: &mut Canvas<sdl2::video::Window>) {

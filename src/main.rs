@@ -9,21 +9,35 @@ mod zbuffer;
 mod matrix4;
 mod quaternion;
 mod camera;
+mod settings;
+mod commandline;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
 use renderer::Renderer;
+use settings::Settings;
+use commandline::{CommandLineProcessor, ParameterType};
 
 fn main() {
-    let width = 800;
-    let height = 800;
+    let mut command_line_processor = CommandLineProcessor::new();
+    command_line_processor.add_parameter("model", ParameterType::Path, vec!["--model".to_owned(), "--m".to_owned()]);
+    command_line_processor.add_parameter("width", ParameterType::UInteger, vec!["--width".to_owned(), "--w".to_owned()]);
+    command_line_processor.add_parameter("height", ParameterType::UInteger, vec!["--height".to_owned(), "--h".to_owned()]);
+    command_line_processor.set_help_text(include_str!("help.txt"));
+    command_line_processor.parse_command_line();
+
+    if command_line_processor.abort_flag() {
+        return;
+    }
+
+    let settings = Settings::from_commandline(&command_line_processor);
 
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
  
-    let window = video_subsystem.window("Software Renderer", width, height)
+    let window = video_subsystem.window("Software Renderer", settings.width(), settings.height())
         .position_centered()
         .build()
         .unwrap();
@@ -31,7 +45,7 @@ fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
 
     let mut renderer = Renderer::new();
-    renderer.load_models();
+    renderer.load_models(vec!(settings.model_path()));
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
