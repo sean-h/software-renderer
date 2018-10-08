@@ -7,16 +7,20 @@ use sdl2::render::Canvas;
 use sdl2::rect::Point;
 use std::mem;
 use zbuffer::ZBuffer;
-use image;
 use image::{GenericImage, DynamicImage};
 use camera::Camera;
 use std::path::Path;
+use material::Material;
+use std::fs::File;
+use std::io::prelude::*;
+use toml::Value;
+use std::collections::HashMap;
 
 pub struct Renderer {
     light_dir: Vector3,
     models: Vec<Model>,
     zbuffer: ZBuffer,
-    texture: Box<DynamicImage>,
+    material: Material,
     timer: f32,
     camera: Camera,
 }
@@ -26,7 +30,7 @@ impl Renderer {
         Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
                    models: Vec::new(),
                    zbuffer: ZBuffer::new(800, 800),
-                   texture: Box::new(image::open("head_diffuse.png").unwrap()),
+                   material: Material::new(),
                    timer: 0.0,
                    camera: Camera::new() }
     }
@@ -36,6 +40,45 @@ impl Renderer {
             let model = Model::new(path);
             self.models.push(model);
         }
+    }
+
+    pub fn load_material(&mut self, material_path: &Path) {
+        let mut f = File::open(material_path.clone()).expect(&format!("File not found: {:?}", material_path));
+        let mut file_contents = String::new();
+        f.read_to_string(&mut file_contents).expect(&format!("Error reading file: {:?}", material_path));
+
+        let toml = file_contents.parse::<Value>().expect(&format!("Unable to parse material: {:?}", material_path));
+
+        let mut material_map = HashMap::new();
+
+        match toml.get("albedo") {
+            Some(albedo) => {
+                if let Some(albedo_path) = albedo.as_str() {
+                    material_map.insert("albedo".to_owned(), albedo_path.to_owned());
+                }
+            },
+            None => ()
+        }
+
+        match toml.get("specular") {
+            Some(specular) => {
+                if let Some(specular_path) = specular.as_str() {
+                    material_map.insert("specular".to_owned(), specular_path.to_owned());
+                }
+            },
+            None => ()
+        }
+
+        match toml.get("normal") {
+            Some(normal) => {
+                if let Some(normal_path) = normal.as_str() {
+                    material_map.insert("normal".to_owned(), normal_path.to_owned());
+                }
+            },
+            None => ()
+        }
+
+        self.material = Material::from_hashmap(material_map);
     }
 
     pub fn render(&mut self, canvas: &mut Canvas<sdl2::video::Window>) {
@@ -70,12 +113,12 @@ impl Renderer {
                     0.0
                 };
 
-                Renderer::draw_triangle(canvas, triangle_mvp, &mut self.zbuffer, Some(&self.texture), intensity);
+                Renderer::draw_triangle(canvas, triangle_mvp, &mut self.zbuffer, &self.material.albedo, intensity);
             }
         }
     }
 
-    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, triangle: Triangle, zbuffer: &mut ZBuffer, texture: Option<&Box<DynamicImage>>, intensity: f32) {
+    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, triangle: Triangle, zbuffer: &mut ZBuffer, texture: &Option<Box<DynamicImage>>, intensity: f32) {
         let canvas_width = canvas.viewport().width() as f32;
         let canvas_height = canvas.viewport().height() as f32;
 

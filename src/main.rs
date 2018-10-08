@@ -1,5 +1,6 @@
 extern crate sdl2;
 extern crate image;
+extern crate toml;
 
 pub mod math;
 mod model;
@@ -8,6 +9,7 @@ mod zbuffer;
 mod camera;
 mod settings;
 pub mod commandline;
+mod material;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
@@ -15,11 +17,12 @@ use sdl2::keyboard::Keycode;
 use std::time::Duration;
 pub use renderer::Renderer;
 use settings::Settings;
-use commandline::{CommandLineProcessor, ParameterType};
+use commandline::{CommandLineProcessor, ParameterType, ParameterValue};
 
 fn main() {
     let mut command_line_processor = CommandLineProcessor::new();
     command_line_processor.add_parameter("model", ParameterType::Path, vec!["--model".to_owned(), "--m".to_owned()]);
+    command_line_processor.add_parameter("material", ParameterType::Path, vec!["--material".to_owned()]);
     command_line_processor.add_parameter("width", ParameterType::UInteger, vec!["--width".to_owned(), "--w".to_owned()]);
     command_line_processor.add_parameter("height", ParameterType::UInteger, vec!["--height".to_owned(), "--h".to_owned()]);
     command_line_processor.set_help_text(include_str!("help.txt"));
@@ -43,6 +46,11 @@ fn main() {
 
     let mut renderer = Renderer::new();
     renderer.load_models(vec!(settings.model_path()));
+
+    match command_line_processor.get_parameter_value("material") {
+        ParameterValue::Path(material_path) => renderer.load_material(material_path),
+        _ => ()
+    }
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
