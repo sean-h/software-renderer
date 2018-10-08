@@ -62,11 +62,11 @@ impl Model {
                     let v1 = t1[0].parse::<usize>().expect(&format!("Could not parse vertex index: {}", line));
                     let v2 = t2[0].parse::<usize>().expect(&format!("Could not parse vertex index: {}", line));
 
-                    let vt0 = t0[1].parse::<usize>().expect(&format!("Could not parse texture vertex index: {}", line));
-                    let vt1 = t1[1].parse::<usize>().expect(&format!("Could not parse texture vertex index: {}", line));
-                    let vt2 = t2[1].parse::<usize>().expect(&format!("Could not parse texture vertex index: {}", line));
+                    let vt0 = get_uv_coordinate(parse_texture_index(t0[1]), &uv);
+                    let vt1 = get_uv_coordinate(parse_texture_index(t1[1]), &uv);
+                    let vt2 = get_uv_coordinate(parse_texture_index(t2[1]), &uv);
 
-                    triangles.push(Triangle::new(vertices[v0-1], vertices[v1-1], vertices[v2-1], uv[vt0-1], uv[vt1-1], uv[vt2-1]));
+                    triangles.push(Triangle::new(vertices[v0-1], vertices[v1-1], vertices[v2-1], vt0, vt1, vt2));
                 },
                 "vt" => {
                     let parts: Vec<&str> = line.split(" ").filter(|x| x.len() > 0).collect();
@@ -85,5 +85,21 @@ impl Model {
 
     pub fn triangles(&self) -> &Vec<Triangle> {
         &self.triangles
+    }
+}
+
+fn parse_texture_index(part: &str) -> usize {
+    if part.len() > 0 {
+        part.parse::<usize>().expect(&format!("Could not parse texture vertex index: {}", part)) - 1
+    } else {
+        0
+    }
+}
+
+fn get_uv_coordinate(index: usize, uv: &Vec<Vector3>) -> Vector3 {
+    if index < uv.len() {
+        uv[index]
+    } else {
+        Vector3::zero()
     }
 }

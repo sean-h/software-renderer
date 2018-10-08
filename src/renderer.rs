@@ -113,7 +113,10 @@ impl Renderer {
                                         let w = texture.width() as f32;
                                         let h = texture.height() as f32;
 
-                                        let color = texture.get_pixel((u * w) as u32, (v * h) as u32);
+                                        let x = clamp((u * w) as u32, 0, w as u32 - 1);
+                                        let y = clamp((v * h) as u32, 0, h as u32 - 1);
+
+                                        let color = texture.get_pixel(x, y);
 
                                         ((color.data[0] as f32 * intensity) as u8, (color.data[1] as f32 * intensity) as u8, (color.data[2] as f32 * intensity) as u8)
                                     },
@@ -180,4 +183,14 @@ impl Renderer {
 
 fn to_screen_space(num: f32, dimension: f32) -> i32 {
     ((num + 1.0) * dimension / 2.0) as i32
+}
+
+fn clamp(val: u32, min: u32, max: u32) -> u32 {
+    if val < min {
+        min
+    } else if val > max {
+        max
+    } else {
+        val
+    }
 }
