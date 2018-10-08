@@ -1,7 +1,8 @@
 use std::f32;
 use std::ops::{Mul};
-use vector3::Vector3;
+use math::Vector3;
 
+/// A quaternion of `f32` values.
 #[derive(Debug, Copy, Clone)]
 pub struct Quaternion {
     pub x: f32,
@@ -11,6 +12,7 @@ pub struct Quaternion {
 }
 
 impl Quaternion {
+    /// Returns a new `Quaternion` with a rotation of x, y, z in radians.
     pub fn new(x: f32, y: f32, z: f32) -> Quaternion {
         let x2 = x / 2.0;
         let y2 = y / 2.0;
@@ -32,6 +34,7 @@ impl Quaternion {
         }
     }
 
+    /// Returns an identity quaternion.
     pub fn identity() -> Quaternion {
         Quaternion { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
     }
@@ -58,7 +61,7 @@ impl Mul for Quaternion {
 
 #[cfg(test)]
 mod tests {
-    use quaternion::Quaternion;
+    use math::Quaternion;
     use std::f32::consts::FRAC_PI_2;
 
     #[test]

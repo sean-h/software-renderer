@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use vector3::Vector3;
+use math::Vector3;
 use std::path::Path;
 
 #[derive(Copy, Clone)]

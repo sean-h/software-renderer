@@ -1,22 +1,19 @@
 extern crate sdl2;
 extern crate image;
 
-mod vector3;
-mod vector2;
+pub mod math;
 mod model;
 mod renderer;
 mod zbuffer;
-mod matrix4;
-mod quaternion;
 mod camera;
 mod settings;
-mod commandline;
+pub mod commandline;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
-use renderer::Renderer;
+pub use renderer::Renderer;
 use settings::Settings;
 use commandline::{CommandLineProcessor, ParameterType};
 

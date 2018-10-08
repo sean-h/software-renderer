@@ -1,5 +1,4 @@
-use vector3::Vector3;
-use quaternion::Quaternion;
+use math::{Vector3, Quaternion};
 
 pub enum Projection {
     Orthographic,

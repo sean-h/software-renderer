@@ -1,7 +1,6 @@
 extern crate sdl2;
 
-use vector3::Vector3;
-use vector2::Vector2i;
+use math::{Vector3, Vector2i, Matrix4};
 use model::{Model, Triangle};
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;
@@ -10,7 +9,6 @@ use std::mem;
 use zbuffer::ZBuffer;
 use image;
 use image::{GenericImage, DynamicImage};
-use matrix4::Matrix4;
 use camera::Camera;
 use std::path::Path;
 

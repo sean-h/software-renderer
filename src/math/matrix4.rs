@@ -1,13 +1,14 @@
 use std::ops::{Mul, Index, IndexMut};
-use vector3::Vector3;
-use quaternion::Quaternion;
+use math::{Vector3, Quaternion};
 
+/// A 4x4 matrix of `f32` values.
 #[derive(Debug, Copy, Clone)]
 pub struct Matrix4 {
     data: [[f32; 4]; 4]
 }
 
 impl Matrix4 {
+    /// Returns an identity matrix.
     pub fn identity() -> Matrix4 {
         Matrix4 {data: [[1.0, 0.0, 0.0, 0.0],
                         [0.0, 1.0, 0.0, 0.0],
@@ -15,6 +16,7 @@ impl Matrix4 {
                         [0.0, 0.0, 0.0, 1.0]]}
     }
 
+    /// Returns a translation matrix for translations along the `x`, `y` and `z` axes.
     pub fn translation(x: f32, y: f32, z: f32) -> Matrix4 {
         Matrix4 {data: [[1.0, 0.0, 0.0,   x],
                         [0.0, 1.0, 0.0,   y],
@@ -22,6 +24,7 @@ impl Matrix4 {
                         [0.0, 0.0, 0.0, 1.0]]}
     }
 
+    /// Returns a scale matrix that scales along the `x`, `y` and `z` axes.
     pub fn scale(x: f32, y: f32, z: f32) -> Matrix4 {
         Matrix4 {data: [[  x, 0.0, 0.0, 0.0],
                         [0.0,   y, 0.0, 0.0],
@@ -29,6 +32,7 @@ impl Matrix4 {
                         [0.0, 0.0, 0.0, 1.0]]}
     }
 
+    /// Returns a rotation matrix for a `Quaternion`.
     pub fn rotation(q: Quaternion) -> Matrix4 {
         let qx2 = q.x * q.x;
         let qy2 = q.y * q.y;
@@ -40,13 +44,13 @@ impl Matrix4 {
         let qwqy = q.w * q.y;
         let qwqz = q.w * q.z;
 
-
         Matrix4 {data: [[1.0 - 2.0 * (qy2 + qz2),     2.0 * (qxqy - qwqz),     2.0 * (qxqz + qwqy), 0.0],
                         [    2.0 * (qxqy + qwqz), 1.0 - 2.0 * (qx2 + qz2),     2.0 * (qyqz - qwqx), 0.0],
                         [    2.0 * (qxqz - qwqy),     2.0 * (qyqz + qwqx), 1.0 - 2.0 * (qx2 + qy2), 0.0],
                         [                    0.0,                     0.0,                     0.0, 1.0]]}
     }
 
+    /// Returns a look at matrix that looks from `position` to `look`.
     pub fn look_at(position: Vector3, look: Vector3, up: Vector3) -> Matrix4 {
         // forward points away from the look direction
         let forward = (position - look).normalized();
@@ -59,6 +63,7 @@ impl Matrix4 {
                         [    0.0,     0.0,       0.0,                              1.0]]}
     }
 
+    /// Returns an orthographic projection matrix.
     pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Matrix4 {
         Matrix4 {data: [[2.0 / (right - left),                  0.0,                  0.0, -(right + left) / (right - left)],
                         [                 0.0, 2.0 / (top - bottom),                  0.0, -(top + bottom) / (top - bottom)],
@@ -112,8 +117,8 @@ impl Mul<Vector3> for Matrix4 {
 
 #[cfg(test)]
 mod tests {
-    use vector3::Vector3;
-    use matrix4::Matrix4;
+    use math::Vector3;
+    use math::Matrix4;
 
     #[test]
     fn test_vector_scale_matrix_multiplication() {
