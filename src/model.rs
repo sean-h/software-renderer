@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use math::Vector3;
 use std::path::Path;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Triangle {
     pub v0: Vector3,
     pub v1: Vector3,

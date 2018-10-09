@@ -8,6 +8,13 @@ pub struct Matrix4 {
 }
 
 impl Matrix4 {
+    pub fn zero() -> Matrix4 {
+        Matrix4 {data: [[0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0]]}
+    }
+
     /// Returns an identity matrix.
     pub fn identity() -> Matrix4 {
         Matrix4 {data: [[1.0, 0.0, 0.0, 0.0],
@@ -69,6 +76,19 @@ impl Matrix4 {
                         [                 0.0, 2.0 / (top - bottom),                  0.0, -(top + bottom) / (top - bottom)],
                         [                 0.0,                  0.0, 2.0 / (-far - -near), -(-far + -near) / (-far - -near)],
                         [                 0.0,                  0.0,                  0.0,                              1.0]]}
+    }
+
+    pub fn perpective(fov: f32, near: f32, far: f32) -> Matrix4 {
+        let mut m = Matrix4::zero();
+        let s = 1.0 / ((fov / 2.0 * 3.14159 / 180.0)).tan();
+
+        m[0][0] = s;
+        m[1][1] = s;
+        m[2][2] = -far / (far - near);
+        m[2][3] = -far * near / (far - near);
+        m[3][2] = -1.0;
+
+        m
     }
 }
 

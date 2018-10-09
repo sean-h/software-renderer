@@ -8,7 +8,7 @@ use sdl2::rect::Point;
 use std::mem;
 use zbuffer::ZBuffer;
 use image::{GenericImage, DynamicImage};
-use camera::Camera;
+use camera::{Camera, Projection};
 use std::path::Path;
 use material::Material;
 use std::fs::File;
@@ -87,8 +87,13 @@ impl Renderer {
         self.timer += 0.1;
         self.camera.position = Vector3::new(10.0 * self.timer.cos(), 0.0, 10.0 * self.timer.sin());
 
+        let projection = match self.camera.projection {
+            Projection::Orthographic(scale) => Matrix4::ortho(-scale, scale, -scale, scale, 0.1, 50.0),
+            Projection::Perspective(fov) => Matrix4::perpective(fov, 0.1, 50.0)
+        };
+
         for model in &self.models {
-            let mvp = Matrix4::ortho(-1.0, 1.0, -1.0, 1.0, 0.1, 50.0)
+            let mvp = projection
             * Matrix4::look_at(self.camera.position, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0))
             * Matrix4::translation(0.0, 0.0, -1.0)
             * Matrix4::scale(0.5, 0.5, 0.5);
@@ -144,7 +149,7 @@ impl Renderer {
                     Some(uvw) => {
                         if uvw.x >= 0.0 && uvw.y >= 0.0 && uvw.z >= 0.0 {
                             let z_distance = uvw.x * screen_space0.z + uvw.y * screen_space1.z + uvw.z * screen_space2.z;
-                            
+
                             if z_distance.abs() < 1.0 && z_distance > zbuffer.sample(x as usize, y as usize) {
                                 zbuffer.set(z_distance, x as usize, y as usize);
 
@@ -173,6 +178,17 @@ impl Renderer {
                     },
                     None => ()
                 }
+            }
+        }
+    }
+
+    pub fn zoom_camera(&mut self, zoom_amount: f32) {
+        match self.camera.projection {
+            Projection::Orthographic(scale) => {
+                self.camera.projection = Projection::Orthographic(scale + zoom_amount * 0.1)
+            },
+            Projection::Perspective(fov) => {
+                self.camera.projection = Projection::Orthographic(fov + zoom_amount)
             }
         }
     }

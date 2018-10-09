@@ -67,6 +67,9 @@ fn main() {
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
                 },
+                Event::MouseWheel { y: mouse_y, .. } => {
+                    renderer.zoom_camera(-mouse_y as f32);
+                }
                 _ => {}
             }
         }

@@ -1,7 +1,7 @@
 use math::{Vector3, Quaternion};
 
 pub enum Projection {
-    Orthographic,
+    Orthographic(f32),
     Perspective(f32),
 }
 
@@ -14,9 +14,9 @@ pub struct Camera {
 impl Camera {
     pub fn new() -> Camera {
         Camera {
-            position: Vector3::new(0.0, 0.0, 0.0),
+            position: Vector3::new(0.0, 0.0, -10.0),
             rotation: Quaternion::new(0.0, 0.0, 1.0),
-            projection: Projection::Orthographic,
+            projection: Projection::Orthographic(1.0),
         }
     }
 }
