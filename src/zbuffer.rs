@@ -20,7 +20,7 @@ impl ZBuffer {
 
     pub fn clear(&mut self) {
         for i in 0..self.buffer.len() {
-            self.buffer[i] = f32::MIN;
+            self.buffer[i] = f32::MAX;
         }
     }
 }

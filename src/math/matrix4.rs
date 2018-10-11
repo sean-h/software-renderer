@@ -1,5 +1,5 @@
 use std::ops::{Mul, Index, IndexMut};
-use math::{Vector3, Quaternion};
+use math::{Vector3, Vector4, Quaternion};
 
 /// A 4x4 matrix of `f32` values.
 #[derive(Debug, Copy, Clone)]
@@ -132,6 +132,19 @@ impl Mul<Vector3> for Matrix4 {
         let z = other.x * self[2][0] + other.y * self[2][1] + other.z * self[2][2] + self[2][3];
 
         Vector3::new(x, y, z)
+    }
+}
+
+impl Mul<Vector4> for Matrix4 {
+    type Output = Vector4;
+
+    fn mul(self, other: Vector4) -> Vector4 {
+        let x = other.x * self[0][0] + other.y * self[0][1] + other.z * self[0][2] + other.w * self[0][3];
+        let y = other.x * self[1][0] + other.y * self[1][1] + other.z * self[1][2] + other.w * self[1][3];
+        let z = other.x * self[2][0] + other.y * self[2][1] + other.z * self[2][2] + other.w * self[2][3];
+        let w = other.x * self[3][0] + other.y * self[3][1] + other.z * self[3][2] + other.w * self[3][3];
+
+        Vector4::new(x, y, z, w)
     }
 }
 

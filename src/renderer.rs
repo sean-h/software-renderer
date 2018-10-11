@@ -27,7 +27,7 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new() -> Renderer {
-        Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
+        Renderer { light_dir: Vector3::new(0.0, 0.0, 1.0),
                    models: Vec::new(),
                    zbuffer: ZBuffer::new(800, 800),
                    material: Material::new(),
@@ -94,26 +94,31 @@ impl Renderer {
 
         for model in &self.models {
             let mvp = projection
-            * Matrix4::look_at(self.camera.position, Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 1.0, 0.0))
-            * Matrix4::translation(0.0, 0.0, -1.0)
-            * Matrix4::scale(0.5, 0.5, 0.5);
+            * Matrix4::look_at(self.camera.position, Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0))
+            * Matrix4::translation(0.0, 0.0, 0.0)
+            * Matrix4::scale(1.0, 1.0, 1.0);
 
             for triangle in model.triangles() {
                 let mut triangle_mvp = *triangle;
-                triangle_mvp.v0 = mvp * triangle_mvp.v0;
-                triangle_mvp.v1 = mvp * triangle_mvp.v1;
-                triangle_mvp.v2 = mvp * triangle_mvp.v2;
+
+                let v0 = mvp * triangle_mvp.v0.to_vector4(1.0);
+                let v1 = mvp * triangle_mvp.v1.to_vector4(1.0);
+                let v2 = mvp * triangle_mvp.v2.to_vector4(1.0);
+
+                triangle_mvp.v0 = Vector3::new(v0.x / v0.w, v0.y / v0.w, v0.z / v0.w);
+                triangle_mvp.v1 = Vector3::new(v1.x / v1.w, v1.y / v1.w, v1.z / v1.w);
+                triangle_mvp.v2 = Vector3::new(v2.x / v2.w, v2.y / v2.w, v2.z / v2.w);
 
                 let normal = Vector3::cross(triangle.v2 - triangle.v0, triangle.v1 - triangle.v0).normalized();
 
                 let camera_forward = (self.camera.position).normalized();
-                if Vector3::dot(normal, camera_forward) < 0.0 {
+                if Vector3::dot(normal, camera_forward) > 0.0 {
                     continue;
                 }
 
                 let intensity = Vector3::dot(normal, self.light_dir);
-                let intensity = if intensity > 0.0 {
-                    intensity
+                let intensity = if intensity < 0.0 {
+                    -intensity
                 } else {
                     0.0
                 };
@@ -150,7 +155,7 @@ impl Renderer {
                         if uvw.x >= 0.0 && uvw.y >= 0.0 && uvw.z >= 0.0 {
                             let z_distance = uvw.x * screen_space0.z + uvw.y * screen_space1.z + uvw.z * screen_space2.z;
 
-                            if z_distance.abs() < 1.0 && z_distance > zbuffer.sample(x as usize, y as usize) {
+                            if z_distance.abs() <= 1.0 && z_distance < zbuffer.sample(x as usize, y as usize) {
                                 zbuffer.set(z_distance, x as usize, y as usize);
 
                                 let u = uvw.x * triangle.vt0.x + uvw.y * triangle.vt1.x + uvw.z * triangle.vt2.x;
@@ -188,8 +193,15 @@ impl Renderer {
                 self.camera.projection = Projection::Orthographic(scale + zoom_amount * 0.1)
             },
             Projection::Perspective(fov) => {
-                self.camera.projection = Projection::Orthographic(fov + zoom_amount)
+                self.camera.projection = Projection::Perspective(fov + zoom_amount)
             }
+        }
+    }
+
+    pub fn toggle_projection_mode(&mut self) {
+        self.camera.projection = match self.camera.projection {
+            Projection::Orthographic(_) => Projection::Perspective(60.0),
+            Projection::Perspective(_) => Projection::Orthographic(5.0),
         }
     }
 

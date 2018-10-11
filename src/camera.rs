@@ -16,7 +16,7 @@ impl Camera {
         Camera {
             position: Vector3::new(0.0, 0.0, -10.0),
             rotation: Quaternion::new(0.0, 0.0, 1.0),
-            projection: Projection::Orthographic(1.0),
+            projection: Projection::Perspective(60.0),
         }
     }
 }

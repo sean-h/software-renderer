@@ -1,4 +1,5 @@
 use std::ops::{Add, Sub, Mul, Neg};
+use math::Vector4;
 
 /// A 3 axis vector of `f32` values.
 #[derive(Debug, Copy, Clone)]
@@ -81,6 +82,9 @@ impl Vector3 {
         Some(Vector3::new(u, v, w))
     }
 
+    pub fn to_vector4(&self, w: f32) -> Vector4 {
+        Vector4::new(self.x, self.y, self.z, w)
+    }
 }
 
 impl Add for Vector3 {

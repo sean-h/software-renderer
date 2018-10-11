@@ -63,9 +63,15 @@ fn main() {
         // Event Handler
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                Event::Quit {..} => {
                     break 'running
+                },
+                Event::KeyDown { keycode: key, .. } => {
+                    match key {
+                        Some(Keycode::Escape) => break 'running,
+                        Some(Keycode::P) => renderer.toggle_projection_mode(),
+                        _ => (),
+                    }
                 },
                 Event::MouseWheel { y: mouse_y, .. } => {
                     renderer.zoom_camera(-mouse_y as f32);
