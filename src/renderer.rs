@@ -1,6 +1,7 @@
 extern crate sdl2;
+extern crate tdmath;
 
-use math::{Vector3, Vector2i, Matrix4};
+use self::tdmath::{Vector3, Vector2i, Matrix4};
 use model::{Model, Triangle};
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;

@@ -1,4 +1,6 @@
-use math::{Vector3, Quaternion};
+extern crate tdmath;
+
+use self::tdmath::{Vector3, Quaternion};
 
 pub enum Projection {
     Orthographic(f32),

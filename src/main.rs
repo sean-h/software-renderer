@@ -2,7 +2,6 @@ extern crate sdl2;
 extern crate image;
 extern crate toml;
 
-pub mod math;
 mod model;
 mod renderer;
 mod zbuffer;

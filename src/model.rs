@@ -1,6 +1,8 @@
+extern crate tdmath;
+
 use std::fs::File;
 use std::io::prelude::*;
-use math::Vector3;
+use self::tdmath::Vector3;
 use std::path::Path;
 
 #[derive(Debug, Copy, Clone)]

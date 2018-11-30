@@ -7,3 +7,4 @@ authors = ["Sean Humeniuk <seanhumeniuk@gmail.com>"]
 sdl2 = "*"
 image = "*"
 toml = "*"
+tdmath = { path = "../tdmath" }
