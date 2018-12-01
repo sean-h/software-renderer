@@ -8,3 +8,4 @@ sdl2 = "*"
 image = "*"
 toml = "*"
 tdmath = { path = "../tdmath" }
+cmdpro = { path = "../cmdpro" }

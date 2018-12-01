@@ -1,5 +1,7 @@
+extern crate cmdpro;
+
 use std::path::{Path, PathBuf};
-use commandline::{CommandLineProcessor, ParameterValue};
+use cmdpro::{CommandLineProcessor, ParameterValue};
 
 pub struct Settings {
     model_path: PathBuf,

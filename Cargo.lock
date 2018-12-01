@@ -40,6 +40,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmdpro"
+version = "0.1.0"
+
+[[package]]
 name = "color_quant"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -373,6 +377,7 @@ dependencies = [
 name = "renderer"
 version = "0.1.0"
 dependencies = [
+ "cmdpro 0.1.0",
  "image 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sdl2 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tdmath 0.1.0",

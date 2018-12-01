@@ -1,13 +1,13 @@
 extern crate sdl2;
 extern crate image;
 extern crate toml;
+extern crate cmdpro;
 
 mod model;
 mod renderer;
 mod zbuffer;
 mod camera;
 mod settings;
-pub mod commandline;
 mod material;
 
 use sdl2::pixels::Color;
@@ -16,7 +16,7 @@ use sdl2::keyboard::Keycode;
 use std::time::Duration;
 pub use renderer::Renderer;
 use settings::Settings;
-use commandline::{CommandLineProcessor, ParameterType, ParameterValue};
+use cmdpro::{CommandLineProcessor, ParameterType, ParameterValue};
 
 fn main() {
     let mut command_line_processor = CommandLineProcessor::new();
