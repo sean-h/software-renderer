@@ -10,6 +10,11 @@ impl ZBuffer {
         ZBuffer { buffer: vec![0.0; (width * height) as usize], width: width }
     }
 
+    pub fn resize(&mut self, width: usize, height: usize) {
+        self.width = width;
+        self.buffer = vec![0.0; (width * height) as usize];
+    }
+
     pub fn sample(&self, x: usize, y: usize) -> f32 {
         self.buffer[x + self.width * y]
     }

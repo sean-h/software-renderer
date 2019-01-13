@@ -85,9 +85,12 @@ impl Renderer {
     pub fn render(&mut self, canvas: &mut Canvas<sdl2::video::Window>) {
         self.zbuffer.clear();
 
+        let (width, height) = canvas.viewport().size();
+        let aspect = width as f32 / height as f32;
+
         let projection = match self.camera.projection {
-            Projection::Orthographic(scale) => Matrix4::ortho(-scale, scale, -scale, scale, 0.1, 50.0),
-            Projection::Perspective(fov) => Matrix4::perpective(fov, 0.1, 50.0)
+            Projection::Orthographic(scale) => Matrix4::ortho(-scale * aspect, scale * aspect, -scale, scale, 0.1, 50.0),
+            Projection::Perspective(fov) => Matrix4::perpective(fov, aspect, 0.1, 50.0)
         };
 
         for model in &self.models {
@@ -252,6 +255,10 @@ impl Renderer {
     pub fn orbit(&mut self, delta_x: f32, delta_y: f32) {
         self.rot_x += delta_x;
         self.camera.position = Vector3::new(10.0 * self.rot_x.cos(), 0.0, 10.0 * self.rot_x.sin());
+    }
+
+    pub fn resize(&mut self, width: usize, height: usize) {
+        self.zbuffer.resize(width, height);
     }
 }
 

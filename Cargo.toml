@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["Sean Humeniuk <seanhumeniuk@gmail.com>"]
 
 [dependencies]
-sdl2 = "*"
-image = "*"
-toml = "*"
+sdl2 = "0.31.0"
+image = "0.19.0"
+toml = "0.4.8"
 tdmath = { git = "https://github.com/sean-h/tdmath.git" }
 cmdpro = { git = "https://github.com/sean-h/cmdpro.git" }
 modelloader = { git = "https://github.com/sean-h/modelloader.git" }

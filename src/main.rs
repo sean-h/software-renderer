@@ -13,7 +13,7 @@ mod settings;
 mod material;
 
 use sdl2::pixels::Color;
-use sdl2::event::Event;
+use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use std::time::Duration;
@@ -41,6 +41,7 @@ fn main() {
  
     let window = video_subsystem.window("Software Renderer", settings.width(), settings.height())
         .position_centered()
+        .resizable()
         .build()
         .unwrap();
  
@@ -72,6 +73,15 @@ fn main() {
             match event {
                 Event::Quit {..} => {
                     break 'running
+                },
+                Event::Window { win_event, .. } => {
+                    match win_event {
+                        WindowEvent::Resized(x, y) => {
+                            //canvas.window_mut().set_size(x as u32, y as u32).unwrap();
+                            renderer.resize(x as usize, y as usize);
+                        },
+                        _ => ()
+                    }
                 },
                 Event::KeyDown { keycode: key, .. } => {
                     match key {
