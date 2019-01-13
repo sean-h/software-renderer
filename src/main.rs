@@ -81,7 +81,8 @@ fn main() {
                     }
                 },
                 Event::MouseWheel { y: mouse_y, .. } => {
-                    renderer.zoom_camera(-mouse_y as f32);
+                    let zoom_sensitivity = 4.0;
+                    renderer.zoom_camera(-mouse_y as f32 * zoom_sensitivity);
                 },
                 Event::MouseButtonDown { mouse_btn, .. } => {
                     if mouse_btn == MouseButton::Left {
