@@ -2,6 +2,8 @@ extern crate sdl2;
 extern crate image;
 extern crate toml;
 extern crate cmdpro;
+extern crate tdmath;
+extern crate modelloader;
 
 mod model;
 mod renderer;

@@ -7,5 +7,6 @@ authors = ["Sean Humeniuk <seanhumeniuk@gmail.com>"]
 sdl2 = "*"
 image = "*"
 toml = "*"
-tdmath = { path = "../tdmath" }
-cmdpro = { path = "../cmdpro" }
+tdmath = { git = "https://github.com/sean-h/tdmath.git" }
+cmdpro = { git = "https://github.com/sean-h/cmdpro.git" }
+modelloader = { git = "https://github.com/sean-h/modelloader.git" }
