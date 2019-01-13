@@ -402,18 +402,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "renderer"
-version = "0.1.0"
-dependencies = [
- "cmdpro 0.1.0 (git+https://github.com/sean-h/cmdpro.git)",
- "image 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "modelloader 0.1.0 (git+https://github.com/sean-h/modelloader.git)",
- "sdl2 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "tdmath 0.1.0 (git+https://github.com/sean-h/tdmath.git)",
- "toml 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "rustc_version"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -469,6 +457,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "serde"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "softwarerenderer"
+version = "0.1.0"
+dependencies = [
+ "cmdpro 0.1.0 (git+https://github.com/sean-h/cmdpro.git)",
+ "image 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "modelloader 0.1.0 (git+https://github.com/sean-h/modelloader.git)",
+ "sdl2 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tdmath 0.1.0 (git+https://github.com/sean-h/tdmath.git)",
+ "toml 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "syn"

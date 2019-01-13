@@ -1,5 +1,5 @@
 [package]
-name = "renderer"
+name = "softwarerenderer"
 version = "0.1.0"
 authors = ["Sean Humeniuk <seanhumeniuk@gmail.com>"]
 
