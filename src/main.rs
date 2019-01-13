@@ -15,6 +15,7 @@ mod material;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 use std::time::Duration;
 pub use renderer::Renderer;
 use settings::Settings;
@@ -56,6 +57,11 @@ fn main() {
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
     canvas.present();
+
+    let mut mouse_down = false;
+    // Set camera position
+    renderer.orbit(0.0, 0.0);
+
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
         canvas.set_draw_color(Color::RGB(65, 65, 65));
@@ -76,6 +82,22 @@ fn main() {
                 },
                 Event::MouseWheel { y: mouse_y, .. } => {
                     renderer.zoom_camera(-mouse_y as f32);
+                },
+                Event::MouseButtonDown { mouse_btn, .. } => {
+                    if mouse_btn == MouseButton::Left {
+                        mouse_down = true;
+                    }
+                },
+                Event::MouseButtonUp { mouse_btn, .. } => {
+                    if mouse_btn == MouseButton::Left {
+                        mouse_down = false;
+                    }
+                },
+                Event::MouseMotion { xrel: delta_x, .. } => {
+                    if mouse_down {
+                        let sensitivity = 0.01;
+                        renderer.orbit(-delta_x as f32 * sensitivity, 0.0);
+                    }
                 }
                 _ => {}
             }

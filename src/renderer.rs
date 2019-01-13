@@ -22,8 +22,8 @@ pub struct Renderer {
     models: Vec<Model>,
     zbuffer: ZBuffer,
     material: Material,
-    timer: f32,
     camera: Camera,
+    rot_x: f32,
 }
 
 impl Renderer {
@@ -32,8 +32,8 @@ impl Renderer {
                    models: Vec::new(),
                    zbuffer: ZBuffer::new(800, 800),
                    material: Material::new(),
-                   timer: 0.0,
-                   camera: Camera::new() }
+                   camera: Camera::new(),
+                   rot_x: 1.57 }
     }
 
     pub fn load_models(&mut self, model_paths: Vec<&Path>) {
@@ -84,9 +84,6 @@ impl Renderer {
 
     pub fn render(&mut self, canvas: &mut Canvas<sdl2::video::Window>) {
         self.zbuffer.clear();
-
-        self.timer += 0.1;
-        self.camera.position = Vector3::new(10.0 * self.timer.cos(), 0.0, 10.0 * self.timer.sin());
 
         let projection = match self.camera.projection {
             Projection::Orthographic(scale) => Matrix4::ortho(-scale, scale, -scale, scale, 0.1, 50.0),
@@ -250,6 +247,11 @@ impl Renderer {
                 error_2 -= dx * 2;
             }
         }
+    }
+
+    pub fn orbit(&mut self, delta_x: f32, delta_y: f32) {
+        self.rot_x += delta_x;
+        self.camera.position = Vector3::new(10.0 * self.rot_x.cos(), 0.0, 10.0 * self.rot_x.sin());
     }
 }
 
