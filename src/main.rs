@@ -77,7 +77,6 @@ fn main() {
                 Event::Window { win_event, .. } => {
                     match win_event {
                         WindowEvent::Resized(x, y) => {
-                            //canvas.window_mut().set_size(x as u32, y as u32).unwrap();
                             renderer.resize(x as usize, y as usize);
                         },
                         _ => ()
@@ -87,6 +86,8 @@ fn main() {
                     match key {
                         Some(Keycode::Escape) => break 'running,
                         Some(Keycode::P) => renderer.toggle_projection_mode(),
+                        Some(Keycode::Equals) => renderer.increase_ambient_intensity(0.1),
+                        Some(Keycode::Minus) => renderer.increase_ambient_intensity(-0.1),
                         _ => (),
                     }
                 },
@@ -107,7 +108,7 @@ fn main() {
                 Event::MouseMotion { xrel: delta_x, .. } => {
                     if mouse_down {
                         let sensitivity = 0.01;
-                        renderer.orbit(-delta_x as f32 * sensitivity, 0.0);
+                        renderer.orbit(delta_x as f32 * sensitivity, 0.0);
                     }
                 }
                 _ => {}

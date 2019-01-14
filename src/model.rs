@@ -31,9 +31,9 @@ impl Model {
                 v0: v[0].p,
                 v1: v[1].p,
                 v2: v[2].p,
-                vt0: v[0].uv,
-                vt1: v[1].uv,
-                vt2: v[2].uv,
+                vt0: Vector3::new(v[0].uv.x, 1.0 - v[0].uv.y, 0.0),
+                vt1: Vector3::new(v[1].uv.x, 1.0 - v[1].uv.y, 0.0),
+                vt2: Vector3::new(v[2].uv.x, 1.0 - v[2].uv.y, 0.0),
             };
 
             triangles.push(t);

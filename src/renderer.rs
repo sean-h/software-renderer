@@ -24,6 +24,7 @@ pub struct Renderer {
     material: Material,
     camera: Camera,
     rot_x: f32,
+    ambient_intensity: f32,
 }
 
 impl Renderer {
@@ -33,7 +34,8 @@ impl Renderer {
                    zbuffer: ZBuffer::new(800, 800),
                    material: Material::new(),
                    camera: Camera::new(),
-                   rot_x: 1.57 }
+                   rot_x: 1.57,
+                   ambient_intensity: 0.0 }
     }
 
     pub fn load_models(&mut self, model_paths: Vec<&Path>) {
@@ -89,8 +91,8 @@ impl Renderer {
         let aspect = width as f32 / height as f32;
 
         let projection = match self.camera.projection {
-            Projection::Orthographic(scale) => Matrix4::ortho(-scale * aspect, scale * aspect, -scale, scale, 0.1, 50.0),
-            Projection::Perspective(fov) => Matrix4::perpective(fov, aspect, 0.1, 50.0)
+            Projection::Orthographic(scale) => Matrix4::ortho(scale * aspect, -scale * aspect, -scale, scale, 0.1, 50.0),
+            Projection::Perspective(fov) => Matrix4::perpective(fov, -aspect, 0.1, 50.0)
         };
 
         for model in &self.models {
@@ -121,7 +123,7 @@ impl Renderer {
                 let intensity = if intensity < 0.0 {
                     -intensity
                 } else {
-                    0.0
+                    self.ambient_intensity
                 };
 
                 Renderer::draw_triangle(canvas, triangle_mvp, &mut self.zbuffer, &self.material.albedo, intensity);
@@ -160,7 +162,7 @@ impl Renderer {
                                 zbuffer.set(z_distance, x as usize, y as usize);
 
                                 let u = uvw.x * triangle.vt0.x + uvw.y * triangle.vt1.x + uvw.z * triangle.vt2.x;
-                                let v = 1.0 - (uvw.x * triangle.vt0.y + uvw.y * triangle.vt1.y + uvw.z * triangle.vt2.y);
+                                let v = uvw.x * triangle.vt0.y + uvw.y * triangle.vt1.y + uvw.z * triangle.vt2.y;
 
                                 let (r, g, b) = match texture {
                                     Some(texture) => {
@@ -259,6 +261,10 @@ impl Renderer {
 
     pub fn resize(&mut self, width: usize, height: usize) {
         self.zbuffer.resize(width, height);
+    }
+
+    pub fn increase_ambient_intensity(&mut self, delta: f32) {
+        self.ambient_intensity += delta;
     }
 }
 
