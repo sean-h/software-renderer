@@ -10,7 +10,7 @@ use std::mem;
 use zbuffer::ZBuffer;
 use image::{GenericImage, DynamicImage};
 use camera::{Camera, Projection};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use material::Material;
 use std::fs::File;
 use std::io::prelude::*;
@@ -57,7 +57,11 @@ impl Renderer {
         match toml.get("albedo") {
             Some(albedo) => {
                 if let Some(albedo_path) = albedo.as_str() {
-                    material_map.insert("albedo".to_owned(), albedo_path.to_owned());
+                    let mut full_path = PathBuf::new();
+                    full_path.push(material_path);
+                    full_path.pop(); // Remove material name
+                    full_path.push(albedo_path);
+                    material_map.insert("albedo".to_owned(), full_path.to_str().unwrap().to_owned());
                 }
             },
             None => ()
@@ -66,7 +70,11 @@ impl Renderer {
         match toml.get("specular") {
             Some(specular) => {
                 if let Some(specular_path) = specular.as_str() {
-                    material_map.insert("specular".to_owned(), specular_path.to_owned());
+                    let mut full_path = PathBuf::new();
+                    full_path.push(material_path);
+                    full_path.pop(); // Remove material name
+                    full_path.push(specular_path);
+                    material_map.insert("specular".to_owned(), full_path.to_str().unwrap().to_owned());
                 }
             },
             None => ()
@@ -75,7 +83,11 @@ impl Renderer {
         match toml.get("normal") {
             Some(normal) => {
                 if let Some(normal_path) = normal.as_str() {
-                    material_map.insert("normal".to_owned(), normal_path.to_owned());
+                    let mut full_path = PathBuf::new();
+                    full_path.push(material_path);
+                    full_path.pop(); // Remove material name
+                    full_path.push(normal_path);
+                    material_map.insert("normal".to_owned(), full_path.to_str().unwrap().to_owned());
                 }
             },
             None => ()
