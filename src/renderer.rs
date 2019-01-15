@@ -104,15 +104,11 @@ impl Renderer {
             for triangle in model.triangles() {
                 let mut triangle_mvp = *triangle;
 
-                let v0 = mvp * triangle_mvp.v0.to_vector4(1.0);
-                let v1 = mvp * triangle_mvp.v1.to_vector4(1.0);
-                let v2 = mvp * triangle_mvp.v2.to_vector4(1.0);
+                triangle_mvp.v0 = mvp * triangle_mvp.v0;
+                triangle_mvp.v1 = mvp * triangle_mvp.v1;
+                triangle_mvp.v2 = mvp * triangle_mvp.v2;
 
-                triangle_mvp.v0 = Vector3::new(v0.x / v0.w, v0.y / v0.w, v0.z / v0.w);
-                triangle_mvp.v1 = Vector3::new(v1.x / v1.w, v1.y / v1.w, v1.z / v1.w);
-                triangle_mvp.v2 = Vector3::new(v2.x / v2.w, v2.y / v2.w, v2.z / v2.w);
-
-                let normal = Vector3::cross(triangle.v2 - triangle.v0, triangle.v1 - triangle.v0).normalized();
+                let normal = Vector3::cross(triangle.v2.xyz() - triangle.v0.xyz(), triangle.v1.xyz() - triangle.v0.xyz()).normalized();
 
                 let camera_forward = (self.camera.position).normalized();
                 if Vector3::dot(normal, camera_forward) > 0.0 {
@@ -135,13 +131,17 @@ impl Renderer {
         let canvas_width = canvas.viewport().width() as f32;
         let canvas_height = canvas.viewport().height() as f32;
 
-        let p0 = Vector2i::new(to_screen_space(triangle.v0.x, canvas_width as f32), to_screen_space(triangle.v0.y, canvas_height as f32));
-        let p1 = Vector2i::new(to_screen_space(triangle.v1.x, canvas_width as f32), to_screen_space(triangle.v1.y, canvas_height as f32));
-        let p2 = Vector2i::new(to_screen_space(triangle.v2.x, canvas_width as f32), to_screen_space(triangle.v2.y, canvas_height as f32));
+        let ndc0 = Vector3::new(triangle.v0.x / triangle.v0.w, triangle.v0.y / triangle.v0.w, triangle.v0.z / triangle.v0.w);
+        let ndc1 = Vector3::new(triangle.v1.x / triangle.v1.w, triangle.v1.y / triangle.v1.w, triangle.v1.z / triangle.v1.w);
+        let ndc2 = Vector3::new(triangle.v2.x / triangle.v2.w, triangle.v2.y / triangle.v2.w, triangle.v2.z / triangle.v2.w);
+
+        let p0 = Vector2i::new(to_screen_space(ndc0.x, canvas_width as f32), to_screen_space(ndc0.y, canvas_height as f32));
+        let p1 = Vector2i::new(to_screen_space(ndc1.x, canvas_width as f32), to_screen_space(ndc1.y, canvas_height as f32));
+        let p2 = Vector2i::new(to_screen_space(ndc2.x, canvas_width as f32), to_screen_space(ndc2.y, canvas_height as f32));
         
-        let screen_space0 = Vector3::new((triangle.v0.x + 1.0) * canvas_width / 2.0, (triangle.v0.y + 1.0) * canvas_height / 2.0, triangle.v0.z);
-        let screen_space1 = Vector3::new((triangle.v1.x + 1.0) * canvas_width / 2.0, (triangle.v1.y + 1.0) * canvas_height / 2.0, triangle.v1.z);
-        let screen_space2 = Vector3::new((triangle.v2.x + 1.0) * canvas_width / 2.0, (triangle.v2.y + 1.0) * canvas_height / 2.0, triangle.v2.z);
+        let screen_space0 = Vector3::new((ndc0.x + 1.0) * canvas_width / 2.0, (ndc0.y + 1.0) * canvas_height / 2.0, ndc0.z);
+        let screen_space1 = Vector3::new((ndc1.x + 1.0) * canvas_width / 2.0, (ndc1.y + 1.0) * canvas_height / 2.0, ndc1.z);
+        let screen_space2 = Vector3::new((ndc2.x + 1.0) * canvas_width / 2.0, (ndc2.y + 1.0) * canvas_height / 2.0, ndc2.z);
 
         let (bbox_min, bbox_max) = Vector2i::bbox3(p0, p1, p2);
 
@@ -161,8 +161,11 @@ impl Renderer {
                             if z_distance.abs() <= 1.0 && z_distance < zbuffer.sample(x as usize, y as usize) {
                                 zbuffer.set(z_distance, x as usize, y as usize);
 
-                                let u = uvw.x * triangle.vt0.x + uvw.y * triangle.vt1.x + uvw.z * triangle.vt2.x;
-                                let v = uvw.x * triangle.vt0.y + uvw.y * triangle.vt1.y + uvw.z * triangle.vt2.y;
+                                let mut clip = Vector3::new(uvw.x / triangle.v0.w, uvw.y / triangle.v1.w, uvw.z / triangle.v2.w);
+                                clip = clip / (clip.x + clip.y + clip.z);
+
+                                let u = clip.x * triangle.vt0.x + clip.y * triangle.vt1.x + clip.z * triangle.vt2.x;
+                                let v = clip.x * triangle.vt0.y + clip.y * triangle.vt1.y + clip.z * triangle.vt2.y;
 
                                 let (r, g, b) = match texture {
                                     Some(texture) => {
