@@ -279,7 +279,7 @@ impl Renderer {
     }
 
     pub fn increase_ambient_intensity(&mut self, delta: f32) {
-        self.ambient_intensity += delta;
+        self.ambient_intensity = clamp(self.ambient_intensity + delta, 0.0, 1.0);
     }
 
     pub fn projection_mode_str(&self) -> &str {
@@ -294,7 +294,9 @@ fn to_screen_space(num: f32, dimension: f32) -> i32 {
     ((num + 1.0) * dimension / 2.0) as i32
 }
 
-fn clamp(val: u32, min: u32, max: u32) -> u32 {
+fn clamp<T>(val: T, min: T, max: T) -> T
+where T: PartialOrd
+{
     if val < min {
         min
     } else if val > max {
