@@ -13,4 +13,4 @@ modelloader = { git = "https://github.com/sean-h/modelloader.git" }
 [dependencies.sdl2]
 version = "0.31.0"
 default-features = false
-features = ["bundled"]
+features = ["bundled", "ttf"]

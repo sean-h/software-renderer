@@ -281,6 +281,13 @@ impl Renderer {
     pub fn increase_ambient_intensity(&mut self, delta: f32) {
         self.ambient_intensity += delta;
     }
+
+    pub fn projection_mode_str(&self) -> &str {
+        match self.camera.projection {
+            Projection::Perspective(_) => "Perspective",
+            Projection::Orthographic(_) => "Orthographic",
+        }
+    }
 }
 
 fn to_screen_space(num: f32, dimension: f32) -> i32 {

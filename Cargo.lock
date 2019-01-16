@@ -1088,7 +1088,7 @@ dependencies = [
 [[package]]
 name = "tdmath"
 version = "0.1.0"
-source = "git+https://github.com/sean-h/tdmath.git#7d6e4d6d4c50ce8607ae892afc6d06471da16c73"
+source = "git+https://github.com/sean-h/tdmath.git#1801d16dfdf177e271020a55c405fc8fb2317cc2"
 dependencies = [
  "rand 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

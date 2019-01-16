@@ -11,6 +11,7 @@ mod zbuffer;
 mod camera;
 mod settings;
 mod material;
+mod text;
 
 use sdl2::pixels::Color;
 use sdl2::event::{Event, WindowEvent};
@@ -20,6 +21,9 @@ use std::time::Duration;
 pub use renderer::Renderer;
 use settings::Settings;
 use cmdpro::{CommandLineProcessor, ParameterType, ParameterValue};
+use text::*;
+use std::collections::HashMap;
+use tdmath::Vector2i;
 
 fn main() {
     let mut command_line_processor = CommandLineProcessor::new();
@@ -38,7 +42,8 @@ fn main() {
 
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
- 
+    let ttf_context = sdl2::ttf::init().unwrap();
+
     let window = video_subsystem.window("Software Renderer", settings.width(), settings.height())
         .position_centered()
         .resizable()
@@ -46,9 +51,19 @@ fn main() {
         .unwrap();
  
     let mut canvas = window.into_canvas().build().unwrap();
+    let texture_creator = canvas.texture_creator();    
 
     let mut renderer = Renderer::new();
     renderer.load_models(vec!(settings.model_path()));
+
+    let font = ttf_context.load_font("fonts/UbuntuMono-R.ttf", 16).unwrap();
+    let mut text_map = HashMap::new();
+
+    let mut proj_text = Text::new();
+    proj_text.set_text(&font, &texture_creator, &format!("(P)rojection: {}", renderer.projection_mode_str()), Color::RGBA(255, 0, 0, 255));
+    proj_text.set_offset(Vector2i::new(0, -25));
+    proj_text.set_anchor(Anchor::BottomLeft);
+    text_map.insert(TextID::Projection, proj_text);
 
     match command_line_processor.get_parameter_value("material") {
         ParameterValue::Path(material_path) => renderer.load_material(material_path),
@@ -85,7 +100,12 @@ fn main() {
                 Event::KeyDown { keycode: key, .. } => {
                     match key {
                         Some(Keycode::Escape) => break 'running,
-                        Some(Keycode::P) => renderer.toggle_projection_mode(),
+                        Some(Keycode::P) => {
+                            renderer.toggle_projection_mode();
+                            if let Some(text) = text_map.get_mut(&TextID::Projection) {
+                                text.set_text(&font, &texture_creator, &format!("(P)rojection: {}", renderer.projection_mode_str()), Color::RGBA(255, 0, 0, 255))
+                            }
+                        },
                         Some(Keycode::Equals) => renderer.increase_ambient_intensity(0.1),
                         Some(Keycode::Minus) => renderer.increase_ambient_intensity(-0.1),
                         _ => (),
@@ -116,6 +136,16 @@ fn main() {
         }
 
         renderer.render(&mut canvas);
+
+        for (_, text) in text_map.iter() {
+            match text.texture() {
+                Some(texture) => {
+                    let position = text.get_position(canvas.viewport().width(), canvas.viewport().height());
+                    canvas.copy(&texture, None, Some(sdl2::rect::Rect::new(position.x, position.y, text.width().unwrap(), text.height().unwrap()))).unwrap();
+                },
+                None => ()
+            }
+        }
         
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
