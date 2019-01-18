@@ -17,7 +17,7 @@ use sdl2::pixels::Color;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 pub use renderer::Renderer;
 use settings::Settings;
 use cmdpro::{CommandLineProcessor, ParameterType, ParameterValue};
@@ -77,9 +77,12 @@ fn main() {
     let mut mouse_down = false;
     // Set camera position
     renderer.orbit(0.0, 0.0);
+    let target_frame_rate = 1_000_000_000u32 / 60;
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
+        let frame_start_time = SystemTime::now();
+
         canvas.set_draw_color(Color::RGB(65, 65, 65));
         canvas.clear();
 
@@ -148,7 +151,15 @@ fn main() {
         }
         
         canvas.present();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+
+        match frame_start_time.elapsed() {
+            Ok(t) => {
+                if t.as_secs() < 1 && t.subsec_nanos() < target_frame_rate {
+                    ::std::thread::sleep(Duration::new(0, target_frame_rate - t.subsec_nanos()));
+                }
+            },
+            Err(e) => println!("Unable to determine render time: {}", e),
+        }
     }
 }
 
