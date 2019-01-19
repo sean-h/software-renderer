@@ -12,6 +12,9 @@ pub struct Triangle {
     pub vt0: Vector3,
     pub vt1: Vector3,
     pub vt2: Vector3,
+    pub vn0: Vector3,
+    pub vn1: Vector3,
+    pub vn2: Vector3,
 }
 
 pub struct Model {
@@ -34,6 +37,9 @@ impl Model {
                 vt0: Vector3::new(v[0].uv.x, 1.0 - v[0].uv.y, 0.0),
                 vt1: Vector3::new(v[1].uv.x, 1.0 - v[1].uv.y, 0.0),
                 vt2: Vector3::new(v[2].uv.x, 1.0 - v[2].uv.y, 0.0),
+                vn0: v[0].normal,
+                vn1: v[1].normal,
+                vn2: v[2].normal,
             };
 
             triangles.push(t);
