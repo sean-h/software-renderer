@@ -8,6 +8,7 @@ use tdmath::Vector2i;
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum TextID {
     Projection,
+    SmoothShading,
 }
 
 #[derive(Debug, Copy, Clone)]

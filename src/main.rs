@@ -61,9 +61,15 @@ fn main() {
 
     let mut proj_text = Text::new();
     proj_text.set_text(&font, &texture_creator, &format!("(P)rojection: {}", renderer.projection_mode_str()), Color::RGBA(255, 0, 0, 255));
-    proj_text.set_offset(Vector2i::new(0, -25));
+    proj_text.set_offset(Vector2i::new(0, -50));
     proj_text.set_anchor(Anchor::BottomLeft);
     text_map.insert(TextID::Projection, proj_text);
+
+    let mut smooth_text = Text::new();
+    smooth_text.set_text(&font, &texture_creator, &format!("(S)mooth Shading: {}", renderer.smooth_shading_str()), Color::RGBA(255, 0, 0, 255));
+    smooth_text.set_offset(Vector2i::new(0, -25));
+    smooth_text.set_anchor(Anchor::BottomLeft);
+    text_map.insert(TextID::SmoothShading, smooth_text);
 
     match command_line_processor.get_parameter_value("material") {
         ParameterValue::Path(material_path) => renderer.load_material(material_path),
@@ -111,6 +117,12 @@ fn main() {
                         },
                         Some(Keycode::Equals) => renderer.increase_ambient_intensity(0.1),
                         Some(Keycode::Minus) => renderer.increase_ambient_intensity(-0.1),
+                        Some(Keycode::S) => {
+                            renderer.toggle_smooth_shading();
+                            if let Some(text) = text_map.get_mut(&TextID::SmoothShading) {
+                                text.set_text(&font, &texture_creator, &format!("(S)mooth Shading: {}", renderer.smooth_shading_str()), Color::RGBA(255, 0, 0, 255));
+                            }
+                        },
                         _ => (),
                     }
                 },

@@ -25,17 +25,20 @@ pub struct Renderer {
     camera: Camera,
     rot_x: f32,
     ambient_intensity: f32,
+    smooth_shading: bool,
 }
 
 impl Renderer {
     pub fn new() -> Renderer {
-        Renderer { light_dir: Vector3::new(0.0, 0.0, 1.0),
+        Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
                    models: Vec::new(),
                    zbuffer: ZBuffer::new(800, 800),
                    material: Material::new(),
                    camera: Camera::new(),
                    rot_x: 1.57,
-                   ambient_intensity: 0.0 }
+                   ambient_intensity: 0.0,
+                   smooth_shading: true,
+        }
     }
 
     pub fn load_models(&mut self, model_paths: Vec<&Path>) {
@@ -107,19 +110,22 @@ impl Renderer {
             Projection::Perspective(fov) => Matrix4::perpective(fov, -aspect, 0.1, 50.0)
         };
 
+        let view = Matrix4::look_at(self.camera.position, Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0));
+
         for model in &self.models {
-            let mvp = projection
-            * Matrix4::look_at(self.camera.position, Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0))
-            * Matrix4::translation(0.0, 0.0, 0.0)
-            * Matrix4::scale(1.0, 1.0, 1.0);
+            let model_matrix = Matrix4::translation(0.0, 0.0, 0.0) * Matrix4::scale(1.0, 1.0, 1.0);
+
+            let render_params = RenderParameters {
+                model: model_matrix,
+                view: view,
+                projection: projection,
+                light_dir: self.light_dir,
+                texture: &self.material.albedo,
+                ambient_intensity: self.ambient_intensity,
+                smooth_shading: self.smooth_shading,
+            };
 
             for triangle in model.triangles() {
-                let mut triangle_mvp = *triangle;
-
-                triangle_mvp.v0 = mvp * triangle_mvp.v0;
-                triangle_mvp.v1 = mvp * triangle_mvp.v1;
-                triangle_mvp.v2 = mvp * triangle_mvp.v2;
-
                 let normal = Vector3::cross(triangle.v2.xyz() - triangle.v0.xyz(), triangle.v1.xyz() - triangle.v0.xyz()).normalized();
 
                 let camera_forward = (self.camera.position).normalized();
@@ -127,25 +133,22 @@ impl Renderer {
                     continue;
                 }
 
-                let intensity = Vector3::dot(normal, self.light_dir);
-                let intensity = if intensity < 0.0 {
-                    -intensity
-                } else {
-                    self.ambient_intensity
-                };
-
-                Renderer::draw_triangle(canvas, triangle_mvp, &mut self.zbuffer, &self.material.albedo, intensity);
+                Renderer::draw_triangle(canvas, &mut self.zbuffer, *triangle, &render_params);
             }
         }
     }
 
-    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, triangle: Triangle, zbuffer: &mut ZBuffer, texture: &Option<Box<DynamicImage>>, intensity: f32) {
+    fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, zbuffer: &mut ZBuffer, triangle: Triangle, render_params: &RenderParameters) {
         let canvas_width = canvas.viewport().width() as f32;
         let canvas_height = canvas.viewport().height() as f32;
 
-        let ndc0 = Vector3::new(triangle.v0.x / triangle.v0.w, triangle.v0.y / triangle.v0.w, triangle.v0.z / triangle.v0.w);
-        let ndc1 = Vector3::new(triangle.v1.x / triangle.v1.w, triangle.v1.y / triangle.v1.w, triangle.v1.z / triangle.v1.w);
-        let ndc2 = Vector3::new(triangle.v2.x / triangle.v2.w, triangle.v2.y / triangle.v2.w, triangle.v2.z / triangle.v2.w);
+        let v0mvp = render_params.projection * render_params.view * render_params.model * triangle.v0;
+        let v1mvp = render_params.projection * render_params.view * render_params.model * triangle.v1;
+        let v2mvp = render_params.projection * render_params.view * render_params.model * triangle.v2;
+
+        let ndc0 = Vector3::new(v0mvp.x / v0mvp.w, v0mvp.y / v0mvp.w, v0mvp.z / v0mvp.w);
+        let ndc1 = Vector3::new(v1mvp.x / v1mvp.w, v1mvp.y / v1mvp.w, v1mvp.z / v1mvp.w);
+        let ndc2 = Vector3::new(v2mvp.x / v2mvp.w, v2mvp.y / v2mvp.w, v2mvp.z / v2mvp.w);
 
         let p0 = Vector2i::new(to_screen_space(ndc0.x, canvas_width as f32), to_screen_space(ndc0.y, canvas_height as f32));
         let p1 = Vector2i::new(to_screen_space(ndc1.x, canvas_width as f32), to_screen_space(ndc1.y, canvas_height as f32));
@@ -173,13 +176,29 @@ impl Renderer {
                             if z_distance.abs() <= 1.0 && z_distance < zbuffer.sample(x as usize, y as usize) {
                                 zbuffer.set(z_distance, x as usize, y as usize);
 
-                                let mut clip = Vector3::new(uvw.x / triangle.v0.w, uvw.y / triangle.v1.w, uvw.z / triangle.v2.w);
+                                let mut clip = Vector3::new(uvw.x / v0mvp.w, uvw.y / v1mvp.w, uvw.z / v2mvp.w);
                                 clip = clip / (clip.x + clip.y + clip.z);
 
                                 let u = clip.x * triangle.vt0.x + clip.y * triangle.vt1.x + clip.z * triangle.vt2.x;
                                 let v = clip.x * triangle.vt0.y + clip.y * triangle.vt1.y + clip.z * triangle.vt2.y;
 
-                                let (r, g, b) = match texture {
+                                let normal = if render_params.smooth_shading {
+                                    let n0 = clip.x * triangle.vn0.x + clip.y * triangle.vn1.x + clip.z * triangle.vn2.x;
+                                    let n1 = clip.x * triangle.vn0.y + clip.y * triangle.vn1.y + clip.z * triangle.vn2.y;
+                                    let n2 = clip.x * triangle.vn0.z + clip.y * triangle.vn1.z + clip.z * triangle.vn2.z;
+                                    Vector3::new(n0, n1, n2)
+                                } else {
+                                    Vector3::cross(triangle.v1.xyz() - triangle.v0.xyz(), triangle.v2.xyz() - triangle.v0.xyz()).normalized()
+                                };
+
+                                let intensity = -Vector3::dot(normal, render_params.light_dir);
+                                let intensity = if intensity >= 0.0 {
+                                    intensity
+                                } else {
+                                    render_params.ambient_intensity
+                                };
+
+                                let (r, g, b) = match render_params.texture {
                                     Some(texture) => {
                                         let w = texture.width() as f32;
                                         let h = texture.height() as f32;
@@ -288,6 +307,17 @@ impl Renderer {
             Projection::Orthographic(_) => "Orthographic",
         }
     }
+
+    pub fn toggle_smooth_shading(&mut self) {
+        self.smooth_shading = !self.smooth_shading;
+    }
+
+    pub fn smooth_shading_str(&self) -> &str {
+        match self.smooth_shading {
+            true => "Enabled",
+            false => "Disabled"
+        }
+    }
 }
 
 fn to_screen_space(num: f32, dimension: f32) -> i32 {
@@ -304,4 +334,15 @@ where T: PartialOrd
     } else {
         val
     }
+}
+
+
+pub struct RenderParameters<'a> {
+    pub model: Matrix4,
+    pub view: Matrix4,
+    pub projection: Matrix4,
+    pub light_dir: Vector3,
+    pub texture: &'a Option<Box<DynamicImage>>,
+    pub ambient_intensity: f32,
+    pub smooth_shading: bool,
 }
