@@ -53,7 +53,7 @@ fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
     let texture_creator = canvas.texture_creator();    
 
-    let mut renderer = Renderer::new();
+    let mut renderer = Renderer::new(settings.width() as usize, settings.height() as usize);
     renderer.load_models(vec!(settings.model_path()));
 
     let font = ttf_context.load_font("fonts/UbuntuMono-R.ttf", 16).unwrap();

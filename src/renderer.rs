@@ -33,10 +33,10 @@ pub struct Renderer {
 
 impl Renderer {
     /// Returns a new `Renderer`.
-    pub fn new() -> Renderer {
+    pub fn new(width: usize, height: usize) -> Renderer {
         Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
                    models: Vec::new(),
-                   zbuffer: ZBuffer::new(800, 800),
+                   zbuffer: ZBuffer::new(width, height),
                    material: Material::new(),
                    camera: Camera::new(),
                    rot_x: 1.57,
