@@ -5,13 +5,13 @@ extern crate cmdpro;
 extern crate tdmath;
 extern crate modelloader;
 
-mod model;
-mod renderer;
-mod zbuffer;
-mod camera;
-mod settings;
-mod material;
-mod text;
+pub mod model;
+pub mod renderer;
+pub mod zbuffer;
+pub mod camera;
+pub mod settings;
+pub mod material;
+pub mod text;
 
 use sdl2::pixels::Color;
 use sdl2::event::{Event, WindowEvent};

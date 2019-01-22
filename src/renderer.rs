@@ -1,3 +1,5 @@
+//! Software Renderer
+
 extern crate sdl2;
 extern crate tdmath;
 
@@ -17,6 +19,7 @@ use std::io::prelude::*;
 use toml::Value;
 use std::collections::HashMap;
 
+/// Renderer
 pub struct Renderer {
     light_dir: Vector3,
     models: Vec<Model>,
@@ -29,6 +32,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
+    /// Returns a new `Renderer`.
     pub fn new() -> Renderer {
         Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
                    models: Vec::new(),
@@ -41,6 +45,7 @@ impl Renderer {
         }
     }
 
+    /// Loads the models in `model_paths`.
     pub fn load_models(&mut self, model_paths: Vec<&Path>) {
         for path in model_paths {
             let model = Model::new(path);
@@ -48,6 +53,7 @@ impl Renderer {
         }
     }
 
+    /// Load the material at the `material_path`.
     pub fn load_material(&mut self, material_path: &Path) {
         let mut f = File::open(material_path.clone()).expect(&format!("File not found: {:?}", material_path));
         let mut file_contents = String::new();
@@ -99,6 +105,7 @@ impl Renderer {
         self.material = Material::from_hashmap(material_map);
     }
 
+    /// Render the scene to the canvas.
     pub fn render(&mut self, canvas: &mut Canvas<sdl2::video::Window>) {
         self.zbuffer.clear();
 
@@ -138,6 +145,7 @@ impl Renderer {
         }
     }
 
+    /// Draw a triangle to the canvas.
     fn draw_triangle(canvas: &mut Canvas<sdl2::video::Window>, zbuffer: &mut ZBuffer, triangle: Triangle, render_params: &RenderParameters) {
         let canvas_width = canvas.viewport().width() as f32;
         let canvas_height = canvas.viewport().height() as f32;
@@ -224,6 +232,7 @@ impl Renderer {
         }
     }
 
+    /// Zoom by camera by `zoom_amount`.
     pub fn zoom_camera(&mut self, zoom_amount: f32) {
         match self.camera.projection {
             Projection::Orthographic(scale) => {
@@ -235,6 +244,7 @@ impl Renderer {
         }
     }
 
+    /// Toggles the camera's projection mode.
     pub fn toggle_projection_mode(&mut self) {
         self.camera.projection = match self.camera.projection {
             Projection::Orthographic(_) => Projection::Perspective(60.0),
@@ -242,6 +252,7 @@ impl Renderer {
         }
     }
 
+    /// Draw a line on the canvas.
     fn draw_line(canvas: &mut Canvas<sdl2::video::Window>, x0: i32, y0: i32, x1: i32, y1: i32) {
         let mut steep = false;
 
@@ -288,19 +299,23 @@ impl Renderer {
         }
     }
 
+    /// Orbit the camera around the origin.
     pub fn orbit(&mut self, delta_x: f32, delta_y: f32) {
         self.rot_x += delta_x;
         self.camera.position = Vector3::new(10.0 * self.rot_x.cos(), 0.0, 10.0 * self.rot_x.sin());
     }
 
+    /// Resize the render window. Call this to resize the `ZBuffer`.
     pub fn resize(&mut self, width: usize, height: usize) {
         self.zbuffer.resize(width, height);
     }
 
+    /// Increase the scene's ambient intensity.
     pub fn increase_ambient_intensity(&mut self, delta: f32) {
         self.ambient_intensity = clamp(self.ambient_intensity + delta, 0.0, 1.0);
     }
 
+    /// Returns the text representation of the current projection mode.
     pub fn projection_mode_str(&self) -> &str {
         match self.camera.projection {
             Projection::Perspective(_) => "Perspective",
@@ -308,10 +323,12 @@ impl Renderer {
         }
     }
 
+    /// Toggle the smooth shading option.
     pub fn toggle_smooth_shading(&mut self) {
         self.smooth_shading = !self.smooth_shading;
     }
 
+    /// Returns the text representation of the current smooth shading option.
     pub fn smooth_shading_str(&self) -> &str {
         match self.smooth_shading {
             true => "Enabled",
@@ -320,10 +337,12 @@ impl Renderer {
     }
 }
 
+/// Coverts a scalar value to the screen space position.
 fn to_screen_space(num: f32, dimension: f32) -> i32 {
     ((num + 1.0) * dimension / 2.0) as i32
 }
 
+/// Clamps `val` between `min` and `max`.
 fn clamp<T>(val: T, min: T, max: T) -> T
 where T: PartialOrd
 {
@@ -336,7 +355,7 @@ where T: PartialOrd
     }
 }
 
-
+/// Parameters to pass into the triangle renderer.
 pub struct RenderParameters<'a> {
     pub model: Matrix4,
     pub view: Matrix4,

@@ -1,3 +1,5 @@
+//! Text Element
+
 use sdl2::surface::Surface;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::ttf::Font;
@@ -5,12 +7,17 @@ use sdl2::video::WindowContext;
 use sdl2::pixels::Color;
 use tdmath::Vector2i;
 
+/// Text Element ID
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum TextID {
+    /// Projection Option Text
     Projection,
+
+    /// Smooth Shading Option Text
     SmoothShading,
 }
 
+/// Anchor Position
 #[derive(Debug, Copy, Clone)]
 pub enum Anchor {
     TopLeft,
@@ -24,6 +31,7 @@ pub enum Anchor {
     BottomRight,
 }
 
+/// Text Element
 pub struct Text<'a> {
     surface: Option<Surface<'a>>,
     texture: Option<Texture<'a>>,
@@ -32,6 +40,7 @@ pub struct Text<'a> {
 }
 
 impl<'a> Text<'a> {
+    /// Returns a new empty `Text`.
     pub fn new() -> Text<'a> {
         Text {
             surface: None,
@@ -41,6 +50,7 @@ impl<'a> Text<'a> {
         }
     }
 
+    /// Sets the text and recreates the surface and texture.
     pub fn set_text(&mut self, font: &Font, texture_creator: &'a TextureCreator<WindowContext>, text: &str, color: Color) {
         let surface = font.render(text).blended(color).unwrap();
 
@@ -48,14 +58,18 @@ impl<'a> Text<'a> {
         self.surface = Some(surface);
     }
 
+    /// Sets the anchor.
     pub fn set_anchor(&mut self, anchor: Anchor) {
         self.anchor = anchor;
     }
 
+    /// Sets the position offset.
     pub fn set_offset(&mut self, offset: Vector2i) {
         self.offset = offset;
     }
 
+    /// Returns the width of the text.
+    /// Returns None if the text has not been set.
     pub fn width(&self) -> Option<u32> {
         match self.surface {
             Some(ref surface) => Some(surface.width()),
@@ -63,6 +77,8 @@ impl<'a> Text<'a> {
         }
     }
 
+    /// Returns the height of the text.
+    /// Returns None if the text has not been set.
     pub fn height(&self) -> Option<u32> {
         match self.surface {
             Some(ref surface) => Some(surface.height()),
@@ -70,14 +86,17 @@ impl<'a> Text<'a> {
         }
     }
 
+    /// Returns the anchor.
     pub fn anchor(&self) -> Anchor {
         self.anchor
     }
 
+    /// Returns the texture.
     pub fn texture(&self) -> &Option<Texture> {
         &self.texture
     }
 
+    /// Returns the position of the text element after the anchor and offset has been applied.
     pub fn get_position(&self, screen_width: u32, screen_height: u32) -> Vector2i {
         let base_position = match self.anchor {
             Anchor::TopLeft => Vector2i::new(0, 0),

@@ -1,9 +1,12 @@
+//! Model
+
 use std::fs::File;
 use std::io::prelude::*;
 use tdmath::{Vector3, Vector4};
 use std::path::Path;
 use modelloader::*;
 
+/// Triangle
 #[derive(Debug, Copy, Clone)]
 pub struct Triangle {
     pub v0: Vector4,
@@ -17,11 +20,13 @@ pub struct Triangle {
     pub vn2: Vector3,
 }
 
+/// Model
 pub struct Model {
     triangles: Vec<Triangle>
 }
 
 impl Model {
+    /// Returns a new `Model` loaded from the filepath specified.
     pub fn new(filepath: &Path) -> Model {
         let mut f = File::open(filepath).expect(&format!("File not found: {:?}", filepath));
         let mut file_contents = String::new();
@@ -48,6 +53,7 @@ impl Model {
         Model { triangles }
     }
 
+    /// Returns a list of the model's triangles.
     pub fn triangles(&self) -> &Vec<Triangle> {
         &self.triangles
     }
