@@ -21,4 +21,4 @@ cargo run --release -- --model models/monkey.obj --material models/color_grid.to
 ## Examples
 
 ![Head](https://github.com/sean-h/software-renderer/blob/master/screenshots/head.png)
-![Monkey](https://github.com/sean-h/software-renderer/blob/master/screenshots/monkey.png)
+![Sphere](https://github.com/sean-h/software-renderer/blob/master/screenshots/sphere.png)
