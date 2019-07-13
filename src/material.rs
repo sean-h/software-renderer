@@ -8,20 +8,9 @@ use std::collections::HashMap;
 /// Material
 pub struct Material {
     pub albedo: Option<Box<DynamicImage>>,
-    specular: Option<Box<DynamicImage>>,
-    normal: Option<Box<DynamicImage>>,
 }
 
 impl Material {
-    /// Returns a new `Material` with no textures
-    pub fn new() -> Material {
-        Material {
-            albedo: None,
-            specular: None,
-            normal: None,
-        }
-    }
-
     /// Returns a new `Material` from a map of texture types and texture paths.
     pub fn from_hashmap(material_map: HashMap<String, String>) -> Material {
         let albedo = match material_map.get("albedo") {
@@ -30,9 +19,15 @@ impl Material {
         };
 
         Material {
-            albedo: albedo,
-            specular: None,
-            normal: None,
+            albedo,
+        }
+    }
+}
+
+impl Default for Material {
+    fn default() -> Self {
+        Material {
+            albedo: None,
         }
     }
 }

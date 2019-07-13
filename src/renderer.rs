@@ -37,8 +37,8 @@ impl Renderer {
         Renderer { light_dir: Vector3::new(0.0, 0.0, -1.0),
                    models: Vec::new(),
                    zbuffer: ZBuffer::new(width, height),
-                   material: Material::new(),
-                   camera: Camera::new(),
+                   material: Material::default(),
+                   camera: Camera::default(),
                    rot_x: 1.57,
                    ambient_intensity: 0.0,
                    smooth_shading: true,
@@ -55,7 +55,7 @@ impl Renderer {
 
     /// Load the material at the `material_path`.
     pub fn load_material(&mut self, material_path: &Path) {
-        let mut f = File::open(material_path.clone()).expect(&format!("File not found: {:?}", material_path));
+        let mut f = File::open(material_path).expect(&format!("File not found: {:?}", material_path));
         let mut file_contents = String::new();
         f.read_to_string(&mut file_contents).expect(&format!("Error reading file: {:?}", material_path));
 
@@ -63,43 +63,34 @@ impl Renderer {
 
         let mut material_map = HashMap::new();
 
-        match toml.get("albedo") {
-            Some(albedo) => {
-                if let Some(albedo_path) = albedo.as_str() {
-                    let mut full_path = PathBuf::new();
-                    full_path.push(material_path);
-                    full_path.pop(); // Remove material name
-                    full_path.push(albedo_path);
-                    material_map.insert("albedo".to_owned(), full_path.to_str().unwrap().to_owned());
-                }
-            },
-            None => ()
+        if let Some(albedo) = toml.get("albedo") {
+            if let Some(albedo_path) = albedo.as_str() {
+                let mut full_path = PathBuf::new();
+                full_path.push(material_path);
+                full_path.pop(); // Remove material name
+                full_path.push(albedo_path);
+                material_map.insert("albedo".to_owned(), full_path.to_str().unwrap().to_owned());
+            }
         }
 
-        match toml.get("specular") {
-            Some(specular) => {
-                if let Some(specular_path) = specular.as_str() {
-                    let mut full_path = PathBuf::new();
-                    full_path.push(material_path);
-                    full_path.pop(); // Remove material name
-                    full_path.push(specular_path);
-                    material_map.insert("specular".to_owned(), full_path.to_str().unwrap().to_owned());
-                }
-            },
-            None => ()
+        if let Some(specular) = toml.get("specular") {
+            if let Some(specular_path) = specular.as_str() {
+                let mut full_path = PathBuf::new();
+                full_path.push(material_path);
+                full_path.pop(); // Remove material name
+                full_path.push(specular_path);
+                material_map.insert("specular".to_owned(), full_path.to_str().unwrap().to_owned());
+            }
         }
 
-        match toml.get("normal") {
-            Some(normal) => {
-                if let Some(normal_path) = normal.as_str() {
-                    let mut full_path = PathBuf::new();
-                    full_path.push(material_path);
-                    full_path.pop(); // Remove material name
-                    full_path.push(normal_path);
-                    material_map.insert("normal".to_owned(), full_path.to_str().unwrap().to_owned());
-                }
-            },
-            None => ()
+        if let Some(normal) = toml.get("normal") {
+            if let Some(normal_path) = normal.as_str() {
+                let mut full_path = PathBuf::new();
+                full_path.push(material_path);
+                full_path.pop(); // Remove material name
+                full_path.push(normal_path);
+                material_map.insert("normal".to_owned(), full_path.to_str().unwrap().to_owned());
+            }
         }
 
         self.material = Material::from_hashmap(material_map);
@@ -124,8 +115,8 @@ impl Renderer {
 
             let render_params = RenderParameters {
                 model: model_matrix,
-                view: view,
-                projection: projection,
+                view,
+                projection,
                 light_dir: self.light_dir,
                 texture: &self.material.albedo,
                 ambient_intensity: self.ambient_intensity,
@@ -168,65 +159,62 @@ impl Renderer {
 
         let (bbox_min, bbox_max) = Vector2i::bbox3(p0, p1, p2);
 
-        for x in bbox_min.x..bbox_max.x+1 {
-            for y in bbox_min.y..bbox_max.y+1 {
+        for x in bbox_min.x..=bbox_max.x {
+            for y in bbox_min.y..=bbox_max.y {
                 if x >= canvas_width as i32 || y >= canvas_height as i32 || x < 0 || y < 0  {
                     continue;
                 }
 
-                let b = Vector3::barycentric(Vector3::new(x as f32, y as f32, 0.0), screen_space0, screen_space1, screen_space2);
+                let barycentric = Vector3::barycentric(Vector3::new(x as f32, y as f32, 0.0), screen_space0, screen_space1, screen_space2);
 
-                match b {
-                    Some(uvw) => {
-                        if uvw.x >= 0.0 && uvw.y >= 0.0 && uvw.z >= 0.0 {
-                            let z_distance = uvw.x * screen_space0.z + uvw.y * screen_space1.z + uvw.z * screen_space2.z;
+                if let Some(uvw) = barycentric {
+                    if uvw.x >= 0.0 && uvw.y >= 0.0 && uvw.z >= 0.0 {
+                        let z_distance = uvw.x * screen_space0.z + uvw.y * screen_space1.z + uvw.z * screen_space2.z;
 
-                            if z_distance.abs() <= 1.0 && z_distance < zbuffer.sample(x as usize, y as usize) {
-                                zbuffer.set(z_distance, x as usize, y as usize);
+                        if z_distance.abs() <= 1.0 && z_distance < zbuffer.sample(x as usize, y as usize) {
+                            zbuffer.set(z_distance, x as usize, y as usize);
 
-                                let mut clip = Vector3::new(uvw.x / v0mvp.w, uvw.y / v1mvp.w, uvw.z / v2mvp.w);
-                                clip = clip / (clip.x + clip.y + clip.z);
+                            let mut clip = Vector3::new(uvw.x / v0mvp.w, uvw.y / v1mvp.w, uvw.z / v2mvp.w);
+                            clip = clip / (clip.x + clip.y + clip.z);
 
-                                let u = clip.x * triangle.vt0.x + clip.y * triangle.vt1.x + clip.z * triangle.vt2.x;
-                                let v = clip.x * triangle.vt0.y + clip.y * triangle.vt1.y + clip.z * triangle.vt2.y;
+                            let u = clip.x * triangle.vt0.x + clip.y * triangle.vt1.x + clip.z * triangle.vt2.x;
+                            let v = clip.x * triangle.vt0.y + clip.y * triangle.vt1.y + clip.z * triangle.vt2.y;
 
-                                let normal = if render_params.smooth_shading {
-                                    let n0 = clip.x * triangle.vn0.x + clip.y * triangle.vn1.x + clip.z * triangle.vn2.x;
-                                    let n1 = clip.x * triangle.vn0.y + clip.y * triangle.vn1.y + clip.z * triangle.vn2.y;
-                                    let n2 = clip.x * triangle.vn0.z + clip.y * triangle.vn1.z + clip.z * triangle.vn2.z;
-                                    Vector3::new(n0, n1, n2)
-                                } else {
-                                    Vector3::cross(triangle.v1.xyz() - triangle.v0.xyz(), triangle.v2.xyz() - triangle.v0.xyz()).normalized()
-                                };
+                            let normal = if render_params.smooth_shading {
+                                let n0 = clip.x * triangle.vn0.x + clip.y * triangle.vn1.x + clip.z * triangle.vn2.x;
+                                let n1 = clip.x * triangle.vn0.y + clip.y * triangle.vn1.y + clip.z * triangle.vn2.y;
+                                let n2 = clip.x * triangle.vn0.z + clip.y * triangle.vn1.z + clip.z * triangle.vn2.z;
+                                Vector3::new(n0, n1, n2)
+                            } else {
+                                Vector3::cross(triangle.v1.xyz() - triangle.v0.xyz(), triangle.v2.xyz() - triangle.v0.xyz()).normalized()
+                            };
 
-                                let intensity = -Vector3::dot(normal, render_params.light_dir);
-                                let intensity = if intensity >= 0.0 {
-                                    intensity
-                                } else {
-                                    render_params.ambient_intensity
-                                };
+                            let intensity = -Vector3::dot(normal, render_params.light_dir);
+                            let intensity = if intensity >= 0.0 {
+                                intensity
+                            } else {
+                                render_params.ambient_intensity
+                            };
 
-                                let (r, g, b) = match render_params.texture {
-                                    Some(texture) => {
-                                        let w = texture.width() as f32;
-                                        let h = texture.height() as f32;
+                            let (red, green, blue) = match render_params.texture {
+                                Some(texture) => {
+                                    let width = texture.width() as f32;
+                                    let height = texture.height() as f32;
 
-                                        let x = clamp((u * w) as u32, 0, w as u32 - 1);
-                                        let y = clamp((v * h) as u32, 0, h as u32 - 1);
+                                    let x = clamp((u * width) as u32, 0, width as u32 - 1);
+                                    let y = clamp((v * height) as u32, 0, height as u32 - 1);
 
-                                        let color = texture.get_pixel(x, y);
+                                    let color = texture.get_pixel(x, y);
 
-                                        ((color.data[0] as f32 * intensity) as u8, (color.data[1] as f32 * intensity) as u8, (color.data[2] as f32 * intensity) as u8)
-                                    },
-                                    None => ((128.0 * intensity) as u8, (128.0 * intensity) as u8, (128.0 * intensity) as u8)
-                                };
-                                
-                                canvas.set_draw_color(Color::RGB(r, g, b));
-                                canvas.draw_point(Point::new(x, y)).unwrap();
-                            }
+                                    ((f32::from(color.data[0]) * intensity) as u8, (f32::from(color.data[1]) * intensity) as u8, (f32::from(color.data[2]) * intensity) as u8)
+                                },
+                                None => ((128.0 * intensity) as u8, (128.0 * intensity) as u8, (128.0 * intensity) as u8)
+                            };
+                            
+                            canvas.set_draw_color(Color::RGB(red, green, blue));
+                            canvas.draw_point(Point::new(x, y)).unwrap();
                         }
-                    },
-                    None => ()
+                    }
                 }
             }
         }
@@ -279,7 +267,7 @@ impl Renderer {
         let mut error_2 = 0;
         let mut y = y0;
 
-        for x in x0..x1+1 {
+        for x in x0..=x1 {
             if steep {
                 canvas.draw_point(Point::new(y, x)).unwrap();
             } else {
@@ -300,7 +288,7 @@ impl Renderer {
     }
 
     /// Orbit the camera around the origin.
-    pub fn orbit(&mut self, delta_x: f32, delta_y: f32) {
+    pub fn orbit(&mut self, delta_x: f32, _delta_y: f32) {
         self.rot_x += delta_x;
         self.camera.position = Vector3::new(10.0 * self.rot_x.cos(), 0.0, 10.0 * self.rot_x.sin());
     }
@@ -330,9 +318,10 @@ impl Renderer {
 
     /// Returns the text representation of the current smooth shading option.
     pub fn smooth_shading_str(&self) -> &str {
-        match self.smooth_shading {
-            true => "Enabled",
-            false => "Disabled"
+        if self.smooth_shading {
+            "Enabled"
+        } else {
+            "Disabled"
         }
     }
 }

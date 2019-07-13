@@ -20,9 +20,8 @@ pub struct Camera {
     pub projection: Projection,
 }
 
-impl Camera {
-    /// Returns a new `Camera` at the origin with a Perspective projection with a FoV of 60.
-    pub fn new() -> Camera {
+impl Default for Camera {
+    fn default() -> Self {
         Camera {
             position: Vector3::new(0.0, 0.0, 0.0),
             rotation: Quaternion::new(0.0, 0.0, 0.0),

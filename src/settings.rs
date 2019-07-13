@@ -33,8 +33,8 @@ impl Settings {
 
         Settings {
             model_path: PathBuf::from(model_path),
-            width: width,
-            height: height,
+            width,
+            height,
         }
     }
 

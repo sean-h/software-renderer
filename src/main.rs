@@ -59,21 +59,20 @@ fn main() {
     let font = ttf_context.load_font("fonts/UbuntuMono-R.ttf", 16).unwrap();
     let mut text_map = HashMap::new();
 
-    let mut proj_text = Text::new();
+    let mut proj_text = Text::default();
     proj_text.set_text(&font, &texture_creator, &format!("(P)rojection: {}", renderer.projection_mode_str()), Color::RGBA(255, 0, 0, 255));
     proj_text.set_offset(Vector2i::new(0, -50));
     proj_text.set_anchor(Anchor::BottomLeft);
     text_map.insert(TextID::Projection, proj_text);
 
-    let mut smooth_text = Text::new();
+    let mut smooth_text = Text::default();
     smooth_text.set_text(&font, &texture_creator, &format!("(S)mooth Shading: {}", renderer.smooth_shading_str()), Color::RGBA(255, 0, 0, 255));
     smooth_text.set_offset(Vector2i::new(0, -25));
     smooth_text.set_anchor(Anchor::BottomLeft);
     text_map.insert(TextID::SmoothShading, smooth_text);
 
-    match command_line_processor.get_parameter_value("material") {
-        ParameterValue::Path(material_path) => renderer.load_material(material_path),
-        _ => ()
+    if let ParameterValue::Path(material_path) = command_line_processor.get_parameter_value("material") {
+       renderer.load_material(material_path);
     }
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
@@ -99,11 +98,8 @@ fn main() {
                     break 'running
                 },
                 Event::Window { win_event, .. } => {
-                    match win_event {
-                        WindowEvent::Resized(x, y) => {
-                            renderer.resize(x as usize, y as usize);
-                        },
-                        _ => ()
+                    if let WindowEvent::Resized(x, y) = win_event {
+                        renderer.resize(x as usize, y as usize);
                     }
                 },
                 Event::KeyDown { keycode: key, .. } => {

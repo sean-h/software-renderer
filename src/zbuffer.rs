@@ -11,7 +11,10 @@ pub struct ZBuffer {
 impl ZBuffer {
     /// Returns a new `ZBuffer` with `width` and `height`.
     pub fn new(width: usize, height: usize) -> ZBuffer {
-        ZBuffer { buffer: vec![0.0; (width * height) as usize], width: width }
+        ZBuffer {
+            buffer: vec![0.0; (width * height) as usize],
+            width,
+        }
     }
 
     /// Resizes this `ZBuffer`.

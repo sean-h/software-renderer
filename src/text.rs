@@ -40,16 +40,6 @@ pub struct Text<'a> {
 }
 
 impl<'a> Text<'a> {
-    /// Returns a new empty `Text`.
-    pub fn new() -> Text<'a> {
-        Text {
-            surface: None,
-            texture: None,
-            anchor: Anchor::TopLeft,
-            offset: Vector2i::new(0, 0),
-        }
-    }
-
     /// Sets the text and recreates the surface and texture.
     pub fn set_text(&mut self, font: &Font, texture_creator: &'a TextureCreator<WindowContext>, text: &str, color: Color) {
         let surface = font.render(text).blended(color).unwrap();
@@ -111,5 +101,16 @@ impl<'a> Text<'a> {
         };
 
         base_position + self.offset
+    }
+}
+
+impl<'a> Default for Text<'a> {
+    fn default() -> Self {
+        Text {
+            surface: None,
+            texture: None,
+            anchor: Anchor::TopLeft,
+            offset: Vector2i::new(0, 0),
+        }
     }
 }
