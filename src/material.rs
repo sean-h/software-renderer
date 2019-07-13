@@ -14,7 +14,7 @@ impl Material {
     /// Returns a new `Material` from a map of texture types and texture paths.
     pub fn from_hashmap(material_map: HashMap<String, String>) -> Material {
         let albedo = match material_map.get("albedo") {
-            Some(albedo_path) => Some(Box::new(image::open(albedo_path).expect(&format!("Cannot load texture: {}", albedo_path)))),
+            Some(albedo_path) => Some(Box::new(image::open(albedo_path).unwrap_or_else(|_| panic!("Cannot load texture: {}", albedo_path)))),
             None => None,
         };
 

@@ -55,11 +55,11 @@ impl Renderer {
 
     /// Load the material at the `material_path`.
     pub fn load_material(&mut self, material_path: &Path) {
-        let mut f = File::open(material_path).expect(&format!("File not found: {:?}", material_path));
+        let mut f = File::open(material_path).unwrap_or_else(|_| panic!("File not found: {:?}", material_path));
         let mut file_contents = String::new();
-        f.read_to_string(&mut file_contents).expect(&format!("Error reading file: {:?}", material_path));
+        f.read_to_string(&mut file_contents).unwrap_or_else(|_| panic!("Error reading file: {:?}", material_path));
 
-        let toml = file_contents.parse::<Value>().expect(&format!("Unable to parse material: {:?}", material_path));
+        let toml = file_contents.parse::<Value>().unwrap_or_else(|_| panic!("Unable to parse material: {:?}", material_path));
 
         let mut material_map = HashMap::new();
 

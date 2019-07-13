@@ -28,9 +28,9 @@ pub struct Model {
 impl Model {
     /// Returns a new `Model` loaded from the filepath specified.
     pub fn new(filepath: &Path) -> Model {
-        let mut f = File::open(filepath).expect(&format!("File not found: {:?}", filepath));
+        let mut f = File::open(filepath).unwrap_or_else(|_| panic!("File not found: {:?}", filepath));
         let mut file_contents = String::new();
-        f.read_to_string(&mut file_contents).expect(&format!("Error reading file: {:?}", filepath));
+        f.read_to_string(&mut file_contents).unwrap_or_else(|_| panic!("Error reading file: {:?}", filepath));
 
         let mut triangles = Vec::new();
         let m = parse_obj_file(&file_contents);
